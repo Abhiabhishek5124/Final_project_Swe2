@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Activity, Home, LogOut, Settings, Utensils } from "lucide-react"
+import { Activity, Home, LogOut, Settings, Utensils, MessageSquare, Phone } from "lucide-react"
 
 export function DashboardNav() {
   const pathname = usePathname()
@@ -26,6 +26,18 @@ export function DashboardNav() {
         <Button variant={pathname === "/dashboard/workouts" ? "default" : "ghost"} className="w-full justify-start">
           <Activity className="mr-2 h-4 w-4" />
           Workout Plan
+        </Button>
+      </Link>
+      <Link href="/dashboard/chatbot">
+        <Button variant={pathname === "/dashboard/chatbot" ? "default" : "ghost"} className="w-full justify-start">
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Nutribyte Chat
+        </Button>
+      </Link>
+      <Link href="/dashboard/contact">
+        <Button variant={pathname === "/dashboard/contact" ? "default" : "ghost"} className="w-full justify-start">
+          <Phone className="mr-2 h-4 w-4" />
+          Contact
         </Button>
       </Link>
       <Link href="/dashboard/profile">
