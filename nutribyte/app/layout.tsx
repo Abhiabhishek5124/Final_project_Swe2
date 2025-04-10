@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { SupabaseProvider } from "@/lib/supabase/provider"
+import { PageTransition } from "@/components/loaders/page-transition"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SupabaseProvider>
+            <PageTransition />
             {children}
             <Toaster />
           </SupabaseProvider>

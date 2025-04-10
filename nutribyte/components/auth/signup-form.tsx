@@ -12,13 +12,15 @@ import { useToast } from "@/components/ui/use-toast"
 import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ProgressLoader } from "@/components/loaders/progress-loader"
+import { Spinner } from "@/components/loaders/spinner"
+import { useLoadingState } from "@/hooks/useLoadingState"
 
 export function SignUpForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { loading, stage, error, withLoading } = useLoadingState()
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createBrowserClient<Database>(
@@ -28,62 +30,70 @@ export function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Sign up with email and password
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
+    
+    withLoading(
+      async () => {
+        // Sign up with email and password
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+            },
           },
-        },
-      })
-
-      if (error) throw error
-
-      if (data.user) {
-        // Create user profile via server API
-        const response = await fetch("/api/create-user-profile", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: data.user.id,
-            fullName,
-            email,
-          }),
         })
 
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || "Failed to create user profile")
+        if (error) throw error
+
+        if (data.user) {
+          // Create user profile via server API
+          const response = await fetch("/api/create-user-profile", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: data.user.id,
+              fullName,
+              email,
+            }),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.error || "Failed to create user profile")
+          }
+
+          toast({
+            title: "Account created",
+            description: "Your account has been created successfully. Please login to continue.",
+          })
+
+          // Redirect to login instead of onboarding
+          router.push("/login")
+          router.refresh()
         }
-
-        toast({
-          title: "Account created",
-          description: "Your account has been created successfully. Please login to continue.",
-        })
-
-        // Redirect to login instead of onboarding
-        router.push("/login")
-        router.refresh()
+      },
+      {
+        stages: {
+          start: "Creating account",
+          auth: "Registering user",
+          profile: "Creating profile",
+          success: "Account created",
+          redirect: "Redirecting to login",
+          error: "Registration failed"
+        },
+        onError: (error) => {
+          console.error("Signup error:", error)
+          toast({
+            title: "Signup failed",
+            description: error.message || "An error occurred during signup.",
+            variant: "destructive",
+          })
+        }
       }
-    } catch (error: any) {
-      console.error("Signup error:", error)
-      setError(error.message || "An error occurred during signup.")
-      toast({
-        title: "Signup failed",
-        description: error.message || "An error occurred during signup.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+    )
   }
 
   return (
@@ -95,6 +105,15 @@ export function SignUpForm() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+          
+          {loading && (
+            <ProgressLoader 
+              loading={loading} 
+              text={stage || "Creating account"} 
+              className="mb-4" 
+            />
+          )}
+          
           <div className="grid gap-2">
             <Label htmlFor="fullName">Full Name</Label>
             <Input
@@ -127,7 +146,14 @@ export function SignUpForm() {
             />
           </div>
           <Button type="submit" disabled={loading}>
-            {loading ? "Creating account..." : "Create account"}
+            {loading ? (
+              <span className="flex items-center">
+                <Spinner size="sm" className="mr-2" />
+                Creating account...
+              </span>
+            ) : (
+              "Create account"
+            )}
           </Button>
         </div>
       </form>

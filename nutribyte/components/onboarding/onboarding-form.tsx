@@ -11,12 +11,15 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-// Update the import
 import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
+import { ProgressLoader } from "@/components/loaders/progress-loader"
+import { Spinner } from "@/components/loaders/spinner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useLoadingState } from "@/hooks/useLoadingState"
 
 export function OnboardingForm() {
-  const [loading, setLoading] = useState(false)
+  const { loading, stage, error, withLoading } = useLoadingState()
   const [formData, setFormData] = useState({
     height: "",
     weight: "",
@@ -27,7 +30,6 @@ export function OnboardingForm() {
   })
   const router = useRouter()
   const { toast } = useToast()
-  // Update the client creation
   const supabase = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -44,49 +46,59 @@ export function OnboardingForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    
+    withLoading(
+      async () => {
+        // Get current user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
 
-    try {
-      // Get current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+        if (!user) {
+          throw new Error("User not authenticated")
+        }
 
-      if (!user) {
-        throw new Error("User not authenticated")
+        // Insert fitness data
+        const { error } = await supabase.from("fitness_data").insert({
+          user_id: user.id,
+          height: formData.height,
+          weight: formData.weight,
+          fitness_goal: formData.fitnessGoal,
+          timeframe: formData.timeframe,
+          available_time: formData.availableTime,
+          dietary_preferences: formData.dietaryPreferences,
+        })
+
+        if (error) throw error
+
+        toast({
+          title: "Onboarding complete",
+          description: "Your information has been saved successfully.",
+        })
+
+        // Redirect to dashboard
+        router.push("/dashboard")
+        router.refresh()
+      },
+      {
+        stages: {
+          start: "Processing",
+          user: "Getting user data",
+          save: "Saving profile information",
+          success: "Setup complete",
+          redirect: "Redirecting to dashboard",
+          error: "Failed to save information"
+        },
+        onError: (error) => {
+          console.error("Error saving onboarding data:", error)
+          toast({
+            title: "Error",
+            description: "Failed to save your information. Please try again.",
+            variant: "destructive",
+          })
+        }
       }
-
-      // Insert fitness data
-      const { error } = await supabase.from("fitness_data").insert({
-        user_id: user.id,
-        height: formData.height,
-        weight: formData.weight,
-        fitness_goal: formData.fitnessGoal,
-        timeframe: formData.timeframe,
-        available_time: formData.availableTime,
-        dietary_preferences: formData.dietaryPreferences,
-      })
-
-      if (error) throw error
-
-      toast({
-        title: "Onboarding complete",
-        description: "Your information has been saved successfully.",
-      })
-
-      // Redirect to dashboard
-      router.push("/dashboard")
-      router.refresh()
-    } catch (error) {
-      console.error("Error saving onboarding data:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save your information. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+    )
   }
 
   return (
@@ -97,6 +109,20 @@ export function OnboardingForm() {
           <CardDescription>We'll use this information to create your personalized plans.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {loading && (
+            <ProgressLoader 
+              loading={loading} 
+              text={stage || "Saving information"} 
+              className="mb-4" 
+            />
+          )}
+          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="height">Height (cm)</Label>
@@ -179,7 +205,14 @@ export function OnboardingForm() {
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Saving..." : "Continue"}
+            {loading ? (
+              <span className="flex items-center">
+                <Spinner size="sm" className="mr-2" />
+                Saving...
+              </span>
+            ) : (
+              "Continue"
+            )}
           </Button>
         </CardFooter>
       </Card>
