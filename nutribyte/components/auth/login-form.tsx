@@ -31,13 +31,32 @@ export function LoginForm() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) {
-        throw error
+      if (signInError) {
+        throw signInError
+      }
+
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        throw new Error("User not authenticated")
+      }
+
+      // Check if the user has completed onboarding
+      const { data: fitnessData, error: fitnessError } = await supabase
+        .from("fitness_data")
+        .select("*")
+        .eq("user_id", user.id)
+        .single()
+
+      if (fitnessError && fitnessError.code !== "PGRST116") {
+        // PGRST116 is "no rows returned" error, which is expected if user hasn't completed onboarding
+        console.error("Error checking fitness data:", fitnessError)
       }
 
       toast({
@@ -45,7 +64,15 @@ export function LoginForm() {
         description: "You have been logged in successfully.",
       })
 
-      router.push("/dashboard")
+      // If first-time login (no fitness data), redirect to onboarding
+      // Otherwise, redirect to dashboard
+      if (!fitnessData) {
+        router.push("/onboarding")
+      } else {
+        router.push("/dashboard")
+      }
+      
+      router.refresh()
     } catch (error: any) {
       setError(error.message)
       toast({

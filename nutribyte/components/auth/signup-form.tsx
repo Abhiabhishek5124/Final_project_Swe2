@@ -11,12 +11,14 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function SignUpForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createBrowserClient<Database>(
@@ -27,6 +29,7 @@ export function SignUpForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError(null)
 
     try {
       // Sign up with email and password
@@ -63,15 +66,16 @@ export function SignUpForm() {
 
         toast({
           title: "Account created",
-          description: "Your account has been created successfully.",
+          description: "Your account has been created successfully. Please login to continue.",
         })
 
-        // Redirect to onboarding
-        router.push("/onboarding")
+        // Redirect to login instead of onboarding
+        router.push("/login")
         router.refresh()
       }
     } catch (error: any) {
       console.error("Signup error:", error)
+      setError(error.message || "An error occurred during signup.")
       toast({
         title: "Signup failed",
         description: error.message || "An error occurred during signup.",
@@ -86,6 +90,11 @@ export function SignUpForm() {
     <div className="grid gap-6">
       <form onSubmit={handleSubmit}>
         <div className="grid gap-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <div className="grid gap-2">
             <Label htmlFor="fullName">Full Name</Label>
             <Input
