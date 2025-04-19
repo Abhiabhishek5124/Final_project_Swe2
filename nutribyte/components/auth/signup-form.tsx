@@ -166,6 +166,13 @@ export function SignUpForm() {
           Sign in
         </Link>
       </div>
+      <div className="text-center">
+        <Link href="/">
+          <Button variant="outline" className="w-full">
+            Back to Home
+          </Button>
+        </Link>
+      </div>
     </div>
   )
 }

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { MainNav } from '@/components/main-nav'
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/ssr'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export function SiteHeader() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
