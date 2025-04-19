@@ -18,6 +18,7 @@ export function ChatbotInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [streamedMessage, setStreamedMessage] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -26,7 +27,7 @@ export function ChatbotInterface() {
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+  }, [messages, streamedMessage])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,23 +43,40 @@ export function ChatbotInterface() {
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
+    setStreamedMessage("")
 
     try {
-      // Here you would integrate with your LLM API
-      // For now, we'll simulate a response
-      const response = await new Promise((resolve) =>
-        setTimeout(() => resolve("I'm your AI assistant. How can I help you with your nutrition and fitness goals?"), 1000)
-      )
-
+      const chatHistory = [
+        ...messages.map((msg) => ({ role: msg.role, content: msg.content })),
+        { role: "user", content: input },
+      ]
+      const response = await fetch("/api/chatbot/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: chatHistory }),
+      })
+      if (!response.body) throw new Error("No response body")
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let done = false
+      let assistantText = ""
+      while (!done) {
+        const { value, done: doneReading } = await reader.read()
+        done = doneReading
+        const chunk = decoder.decode(value)
+        assistantText += chunk
+        setStreamedMessage(assistantText)
+      }
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: response as string,
+        content: assistantText,
         role: "assistant",
         timestamp: new Date(),
       }
-
       setMessages((prev) => [...prev, assistantMessage])
+      setStreamedMessage("")
     } catch (error) {
+      setStreamedMessage("")
       console.error("Error getting response:", error)
     } finally {
       setIsLoading(false)
@@ -98,18 +116,19 @@ export function ChatbotInterface() {
                 </div>
               </div>
             ))}
-            {isLoading && (
+            {(isLoading || streamedMessage) && (
               <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/nutribyte-avatar.png" alt="Nutribyte" />
                   <AvatarFallback>N</AvatarFallback>
                 </Avatar>
                 <div className="rounded-lg bg-muted px-4 py-2">
-                  <div className="flex space-x-2">
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground"></div>
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: "0.2s" }}></div>
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: "0.4s" }}></div>
-                  </div>
+                  <span className="text-sm whitespace-pre-line">
+                    {streamedMessage}
+                    {isLoading && !streamedMessage && (
+                      <span className="inline-block animate-bounce">...</span>
+                    )}
+                  </span>
                 </div>
               </div>
             )}
@@ -131,4 +150,4 @@ export function ChatbotInterface() {
       </Card>
     </div>
   )
-} 
+}

@@ -1,29 +1,19 @@
-import { redirect } from "next/navigation"
-import { LoginForm } from "@/components/auth/login-form"
-import { createServerClient } from "@/lib/supabase/server"
+// app/login/page.tsx
+import { redirect } from 'next/navigation'
+import { LoginForm } from '@/components/auth/login-form'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
-export default async function LoginPage() {
-  const supabase = createServerClient()
-
-  // Check if user is already authenticated
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // If user is already authenticated, redirect to dashboard
-  if (session) {
-    redirect("/dashboard")
+export default async function LoginPage({ searchParams }: { searchParams: { redirectedFrom?: string } }) {
+  const params = await searchParams;
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (!error && data?.user) {
+    redirect('/dashboard');
   }
-
   return (
-    <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">Enter your email to sign in to your account</p>
-        </div>
-        <LoginForm />
-      </div>
-    </div>
-  )
+    <main className="flex min-h-screen flex-col items-center justify-center">
+      <h1 className="text-3xl font-bold">Login</h1>
+      <LoginForm redirectTo={params.redirectedFrom} />
+    </main>
+  );
 }

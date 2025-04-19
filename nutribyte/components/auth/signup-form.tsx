@@ -52,6 +52,8 @@ export function SignUpForm() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${data.session.access_token}`
+              
             },
             body: JSON.stringify({
               id: data.user.id,
@@ -69,10 +71,11 @@ export function SignUpForm() {
             title: "Account created",
             description: "Your account has been created successfully. Please login to continue.",
           })
-
-          // Redirect to login instead of onboarding
+  
+          console.log("✅ Profile created, redirecting to login...")
+  
+          // ✅ Step 6: Redirect to login
           router.push("/login")
-          router.refresh()
         }
       },
       {

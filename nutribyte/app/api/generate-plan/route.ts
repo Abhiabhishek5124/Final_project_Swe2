@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { generateAIPlan } from "@/lib/openai"
 
 export async function POST(request: Request) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createSupabaseServerClient()
 
-    // Check if user is authenticated
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -15,11 +14,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get request body
     const body = await request.json()
     const { fitnessDataId, regenerate = false } = body
 
-    // Get fitness data
     const { data: fitnessData, error: fitnessError } = await supabase
       .from("fitness_data")
       .select("*")
@@ -31,7 +28,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Fitness data not found" }, { status: 404 })
     }
 
-    // Check if plans already exist and regenerate is false
     if (!regenerate) {
       const { data: existingNutritionPlan } = await supabase
         .from("nutrition_plans")
@@ -57,10 +53,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Generate plans using OpenAI
     const { nutritionPlan, workoutPlan } = await generateAIPlan(fitnessData)
 
-    // If regenerate is true, deactivate existing plans
     if (regenerate) {
       await supabase
         .from("nutrition_plans")
@@ -75,7 +69,6 @@ export async function POST(request: Request) {
         .eq("is_active", true)
     }
 
-    // Insert new nutrition plan
     const { data: newNutritionPlan, error: nutritionError } = await supabase
       .from("nutrition_plans")
       .insert({
@@ -91,7 +84,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to save nutrition plan" }, { status: 500 })
     }
 
-    // Insert new workout plan
     const { data: newWorkoutPlan, error: workoutError } = await supabase
       .from("workout_plans")
       .insert({

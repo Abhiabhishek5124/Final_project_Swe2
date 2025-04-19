@@ -4,44 +4,35 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Overview } from "@/components/dashboard/overview"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
-import { createServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getUserProfile } from "@/lib/supabase/queries"
 
 export default async function DashboardPage() {
-  const supabase = createServerClient()
-
-  // Check if user is authenticated
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  if (!session) {
-    redirect("/login")
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) {
+    redirect("/login");
   }
+  const sessionUser = data.user;
+  const userProfile = await getUserProfile(supabase, sessionUser.id);
 
-  // Get user profile
-  const userProfile = await getUserProfile(supabase, session.user.id)
+  const { data: fitnessData } = await supabase.from("fitness_data").select("*").eq("user_id", sessionUser.id).single()
 
-  // Check if user has completed onboarding
-  const { data: fitnessData } = await supabase.from("fitness_data").select("*").eq("user_id", session.user.id).single()
-
-  // If user hasn't completed onboarding, redirect to onboarding
   if (!fitnessData) {
     redirect("/onboarding")
   }
 
-  // Get active nutrition and workout plans
   const { data: nutritionPlan } = await supabase
     .from("nutrition_plans")
     .select("*")
-    .eq("user_id", session.user.id)
+    .eq("user_id", sessionUser.id)
     .eq("is_active", true)
     .single()
 
   const { data: workoutPlan } = await supabase
     .from("workout_plans")
     .select("*")
-    .eq("user_id", session.user.id)
+    .eq("user_id", sessionUser.id)
     .eq("is_active", true)
     .single()
 

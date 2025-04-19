@@ -1,15 +1,13 @@
-import { createServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
-  const supabase = createServerClient()
+  const supabase = await createSupabaseServerClient()
 
-  // Sign out the user
   await supabase.auth.signOut()
   
-  // Clear all auth cookies
   const cookieStore = cookies()
   cookieStore.getAll().forEach((cookie) => {
     if (cookie.name.startsWith('sb-')) {
@@ -17,6 +15,5 @@ export async function GET(request: Request) {
     }
   })
 
-  // Redirect to the login page
   return NextResponse.redirect(`${requestUrl.origin}/login`)
 }

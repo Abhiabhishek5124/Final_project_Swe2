@@ -4,12 +4,11 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NutritionPlanDisplay } from "@/components/dashboard/nutrition-plan-display"
-import { createServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export default async function NutritionPage() {
-  const supabase = createServerClient()
+  const supabase = await createSupabaseServerClient();
 
-  // Check if user is authenticated
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -18,7 +17,6 @@ export default async function NutritionPage() {
     redirect("/login")
   }
 
-  // Get active nutrition plan
   const { data: nutritionPlan } = await supabase
     .from("nutrition_plans")
     .select("*")
@@ -26,7 +24,6 @@ export default async function NutritionPage() {
     .eq("is_active", true)
     .single()
 
-  // If no plan exists, redirect to generate plan
   if (!nutritionPlan) {
     redirect("/dashboard/generate")
   }

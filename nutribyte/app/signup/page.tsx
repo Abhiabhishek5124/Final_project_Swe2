@@ -1,20 +1,18 @@
 import { redirect } from "next/navigation"
 import { SignUpForm } from "@/components/auth/signup-form"
-import { createServerClient } from "@/lib/supabase/server"
+import { cookies } from 'next/headers'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import type { Database } from '@/types/supabase'
 
 export default async function SignUpPage() {
-  const supabase = createServerClient()
-
-  // Check if user is already authenticated
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // If user is already authenticated, redirect to dashboard
+  const cookieStore = await cookies();
+  const supabase = createServerComponentClient<Database>({
+    cookies: () => cookieStore,
+  });
+  const { data: { session } } = await supabase.auth.getSession();
   if (session) {
-    redirect("/dashboard")
+    redirect("/dashboard");
   }
-
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
@@ -25,5 +23,5 @@ export default async function SignUpPage() {
         <SignUpForm />
       </div>
     </div>
-  )
+  );
 }

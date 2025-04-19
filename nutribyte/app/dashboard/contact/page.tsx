@@ -2,20 +2,16 @@ import { redirect } from "next/navigation"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { ContactForm } from "@/components/dashboard/contact-form"
-import { createServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 export default async function ContactPage() {
-  const supabase = createServerClient()
-
-  // Check if user is authenticated
+  const supabase = await createSupabaseServerClient()
   const {
     data: { session },
   } = await supabase.auth.getSession()
-
   if (!session) {
     redirect("/login")
   }
-
   return (
     <DashboardShell>
       <DashboardHeader
@@ -105,4 +101,4 @@ export default async function ContactPage() {
       </div>
     </DashboardShell>
   )
-} 
+}

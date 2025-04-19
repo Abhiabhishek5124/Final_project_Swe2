@@ -4,10 +4,10 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WorkoutPlanDisplay } from "@/components/dashboard/workout-plan-display"
-import { createServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 export default async function WorkoutsPage() {
-  const supabase = createServerClient()
+  const supabase = await createSupabaseServerClient()
 
   // Check if user is authenticated
   const {

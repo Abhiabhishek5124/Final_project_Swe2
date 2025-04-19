@@ -1,5 +1,27 @@
-"use client"
+// import { createSupabaseServerClient } from '@/lib/supabase/server'
+// import Link from 'next/link'
 
+// export default async function HomePage() {
+//   const supabase = await createSupabaseServerClient();
+//   const { data, error } = await supabase.auth.getUser();
+//   const isLoggedIn = !error && data?.user;
+//   return (
+//     <main className="flex min-h-screen flex-col items-center justify-center">
+//       <h1 className="text-3xl font-bold">Welcome to Nutribyte</h1>
+//       {isLoggedIn ? (
+//         <Link href="/dashboard">
+//           <button className="mt-6 px-6 py-2 rounded bg-blue-600 text-white text-lg hover:bg-blue-700 transition">Go to Dashboard</button>
+//         </Link>
+//       ) : (
+//         <p className="mt-4">Please <a href="/login" className="underline text-blue-600">log in</a> to continue.</p>
+//       )}
+//     </main>
+//   );
+// }
+
+
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import { useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { HeroSection } from "@/components/landing/hero-section"
@@ -9,25 +31,10 @@ import { PricingSection } from "@/components/landing/pricing-section"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 
-export default function Home() {
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    // Check if there's a hash in the URL
-    const hash = window.location.hash
-    if (hash) {
-      // Remove the # character
-      const id = hash.substring(1)
-      const element = document.getElementById(id)
-      if (element) {
-        // Scroll to the element
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: "smooth" })
-        }, 100)
-      }
-    }
-  }, [searchParams])
-
+export default async function HomePage() {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getUser();
+  const isLoggedIn = !error && data?.user;
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
@@ -39,5 +46,5 @@ export default function Home() {
       </main>
       <SiteFooter />
     </div>
-  )
+  );
 }

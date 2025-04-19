@@ -2,20 +2,16 @@ import { redirect } from "next/navigation"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { ChatbotInterface } from "@/components/dashboard/chatbot-interface"
-import { createServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 export default async function ChatbotPage() {
-  const supabase = createServerClient()
-
-  // Check if user is authenticated
+  const supabase = await createSupabaseServerClient()
   const {
     data: { session },
   } = await supabase.auth.getSession()
-
   if (!session) {
     redirect("/login")
   }
-
   return (
     <DashboardShell>
       <DashboardHeader
@@ -27,4 +23,4 @@ export default async function ChatbotPage() {
       </div>
     </DashboardShell>
   )
-} 
+}

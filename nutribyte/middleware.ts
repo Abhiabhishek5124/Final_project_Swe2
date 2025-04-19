@@ -1,8 +1,6 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-// This middleware will run on all routes
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -11,8 +9,8 @@ export async function middleware(request: NextRequest) {
   })
 
   const supabase = createServerClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
@@ -56,39 +54,13 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Check auth status
-  const { data: { session } } = await supabase.auth.getSession()
-
-  const path = request.nextUrl.pathname
-  
-  // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/signup', '/']
-
-  // Protected routes that require authentication
-  const protectedRoutes = ['/dashboard', '/onboarding']
-  
-  // Check if the current route is a protected route
-  const isProtectedRoute = protectedRoutes.some(route => 
-    path === route || path.startsWith(`${route}/`)
-  )
-  
-  // If accessing a protected route without a session, redirect to login
-  if (isProtectedRoute && !session) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-  
-  // If logged in user tries to access login/signup pages, redirect to dashboard
-  if (session && publicRoutes.includes(path) && path !== '/') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+  await supabase.auth.getSession()
 
   return response
 }
 
-// Configure the middleware to run only on specific paths
 export const config = {
   matcher: [
-    // Match all routes except static files, api routes, and _next system paths
-    '/((?!_next/static|_next/image|favicon.ico|api/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/auth).*)',
   ],
-} 
+}

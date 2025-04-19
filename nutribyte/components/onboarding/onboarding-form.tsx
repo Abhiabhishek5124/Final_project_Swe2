@@ -46,19 +46,14 @@ export function OnboardingForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     withLoading(
       async () => {
-        // Get current user
         const {
           data: { user },
         } = await supabase.auth.getUser()
-
         if (!user) {
           throw new Error("User not authenticated")
         }
-
-        // Insert fitness data
         const { error } = await supabase.from("fitness_data").insert({
           user_id: user.id,
           height: formData.height,
@@ -68,15 +63,11 @@ export function OnboardingForm() {
           available_time: formData.availableTime,
           dietary_preferences: formData.dietaryPreferences,
         })
-
         if (error) throw error
-
         toast({
           title: "Onboarding complete",
           description: "Your information has been saved successfully.",
         })
-
-        // Redirect to dashboard
         router.push("/dashboard")
         router.refresh()
       },
@@ -90,7 +81,6 @@ export function OnboardingForm() {
           error: "Failed to save information"
         },
         onError: (error) => {
-          console.error("Error saving onboarding data:", error)
           toast({
             title: "Error",
             description: "Failed to save your information. Please try again.",
@@ -114,7 +104,6 @@ export function OnboardingForm() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
           {loading && (
             <ProgressLoader 
               loading={loading} 
@@ -122,7 +111,6 @@ export function OnboardingForm() {
               className="mb-4" 
             />
           )}
-          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="height">Height (cm)</Label>
@@ -204,15 +192,9 @@ export function OnboardingForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? (
-              <span className="flex items-center">
-                <Spinner size="sm" className="mr-2" />
-                Saving...
-              </span>
-            ) : (
-              "Continue"
-            )}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? <Spinner size="sm" className="mr-2" /> : null}
+            {loading ? "Saving..." : "Continue"}
           </Button>
         </CardFooter>
       </Card>

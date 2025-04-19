@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
@@ -13,9 +13,8 @@ export async function GET(request: Request) {
       )
     }
     
-    const supabase = createServerClient()
+    const supabase = await createSupabaseServerClient()
     
-    // Check if user has completed onboarding
     const { data, error } = await supabase
       .from("fitness_data")
       .select("*")
@@ -30,7 +29,6 @@ export async function GET(request: Request) {
       )
     }
     
-    // Return whether onboarding is completed
     return NextResponse.json({
       onboardingCompleted: !!data,
       fitnessData: data || null

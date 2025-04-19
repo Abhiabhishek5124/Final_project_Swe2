@@ -15,10 +15,7 @@ export function NutritionPlanDisplay({ plan, view }: NutritionPlanDisplayProps) 
   const [editing, setEditing] = useState(false)
   const [editedPlan, setEditedPlan] = useState(plan)
 
-  // This is a simplified example - in a real app, you would have more structured data
-  // and more sophisticated editing capabilities
   const handleSave = async () => {
-    // Here you would call an API to save the edited plan
     setEditing(false)
   }
 
@@ -125,7 +122,6 @@ export function NutritionPlanDisplay({ plan, view }: NutritionPlanDisplayProps) 
   }
 
   if (view === "weekly") {
-    // Weekly view implementation
     return (
       <div className="space-y-4">
         <p>Weekly nutrition plan view would go here</p>
@@ -133,7 +129,6 @@ export function NutritionPlanDisplay({ plan, view }: NutritionPlanDisplayProps) 
     )
   }
 
-  // Meals view
   return (
     <div className="space-y-4">
       <p>Meal database view would go here</p>

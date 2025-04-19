@@ -1,6 +1,5 @@
+// components/auth/login-form.tsx
 "use client"
-
-import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -16,15 +15,20 @@ import { ProgressLoader } from "@/components/loaders/progress-loader"
 import { Spinner } from "@/components/loaders/spinner"
 import { useLoadingState } from "@/hooks/useLoadingState"
 
-export function LoginForm() {
+interface LoginFormProps {
+  redirectTo?: string
+}
+
+export function LoginForm({ redirectTo }: LoginFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const { loading, stage, error, withLoading } = useLoadingState()
   const router = useRouter()
   const { toast } = useToast()
+
   const supabase = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,32 +53,14 @@ export function LoginForm() {
           throw new Error("User not authenticated")
         }
 
-        // Check if the user has completed onboarding
-        const { data: fitnessData, error: fitnessError } = await supabase
-          .from("fitness_data")
-          .select("*")
-          .eq("user_id", user.id)
-          .single()
-
-        if (fitnessError && fitnessError.code !== "PGRST116") {
-          // PGRST116 is "no rows returned" error, which is expected if user hasn't completed onboarding
-          console.error("Error checking fitness data:", fitnessError)
-        }
-
         toast({
           title: "Success",
           description: "You have been logged in successfully.",
         })
 
-        // If first-time login (no fitness data), redirect to onboarding
-        // Otherwise, redirect to dashboard
-        if (!fitnessData) {
-          router.push("/onboarding")
-        } else {
-          router.push("/dashboard")
-        }
-        
-        router.refresh()
+        // Redirect to dashboard or the specified path
+        router.push(redirectTo || "/dashboard")
+        router.refresh() // Ensure the page updates with the new auth state
       },
       {
         stages: {
@@ -83,7 +69,7 @@ export function LoginForm() {
           user: "Getting user data",
           profile: "Checking profile",
           success: "Login successful",
-          redirect: "Redirecting",
+          redirect: redirectTo ? `Redirecting to ${redirectTo}` : "Redirecting to dashboard",
           error: "Login failed"
         },
         onError: (error) => {

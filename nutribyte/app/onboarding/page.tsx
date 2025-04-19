@@ -1,27 +1,18 @@
-import { redirect } from "next/navigation"
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import { OnboardingForm } from "@/components/onboarding/onboarding-form"
-import { createServerClient } from "@/lib/supabase/server"
 
 export default async function OnboardingPage() {
-  const supabase = createServerClient()
-
-  // Check if user is authenticated
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  if (!session) {
-    redirect("/login")
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) {
+    redirect('/login');
   }
-
   // Check if user has already completed onboarding
-  const { data: fitnessData } = await supabase.from("fitness_data").select("*").eq("user_id", session.user.id).single()
-
-  // If user has already completed onboarding, redirect to dashboard
+  const { data: fitnessData } = await supabase.from("fitness_data").select("*").eq("user_id", data.user.id).single();
   if (fitnessData) {
-    redirect("/dashboard")
+    redirect("/dashboard");
   }
-
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[550px]">
@@ -32,5 +23,5 @@ export default async function OnboardingPage() {
         <OnboardingForm />
       </div>
     </div>
-  )
+  );
 }
