@@ -39,7 +39,7 @@ export default async function DashboardPage() {
   return (
     <DashboardShell>
       <DashboardHeader
-        heading="Dashboard"
+        heading={`Hi ${userProfile?.full_name?.split(' ')[0] || 'there'}!`}
         text="Welcome back! Here's an overview of your nutrition and fitness plans."
       />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
