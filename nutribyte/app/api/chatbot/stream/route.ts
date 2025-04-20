@@ -18,12 +18,24 @@ export async function POST(req: NextRequest) {
   }
   try {
     const response = await client.chat.completions.create({
-      model: 'o3-mini',
+      model: 'gpt-3.5-turbo',
       messages,
+      
     })
-    const content = response.choices?.[0]?.message?.content || ''
-    return new Response(JSON.stringify({ content }), {
-      headers: { 'Content-Type': 'application/json' },
+    console.log(response)
+    const originalContent = response.choices?.[0]?.message?.content || ''
+    let extractedContent = ''
+
+    try {
+      const parsed = JSON.parse(originalContent)
+      extractedContent = parsed.content || ''
+    } catch (e) {
+      console.warn('Failed to parse inner content as JSON. Using raw content.')
+      extractedContent = originalContent
+    }
+
+    return new Response(extractedContent, {
+      headers: { 'Content-Type': 'text/plain' },
     })
   } catch (err: any) {
     console.error('Chatbot API error:', err)
