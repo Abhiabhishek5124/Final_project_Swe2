@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
+import { createBrowserClient } from "@supabase/ssr"
+import type { Database } from "@/types/supabase"
 
 interface Message {
   id: string
@@ -14,12 +16,50 @@ interface Message {
   timestamp: Date
 }
 
+const defaultQuestions = [
+  "What's a good meal plan for my goals?",
+  "Can you suggest a workout routine?",
+  "How can I track my progress?",
+  "What are some healthy snack options?",
+]
+
 export function ChatbotInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [streamedMessage, setStreamedMessage] = useState("")
+  const [userName, setUserName] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const supabase = createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const { data: userProfile } = await supabase
+          .from("user_profiles")
+          .select("full_name")
+          .eq("id", session.user.id)
+          .single()
+        
+        if (userProfile) {
+          setUserName(userProfile.full_name)
+          // Add welcome message
+          setMessages([{
+            id: "welcome",
+            content: `Hi ${userProfile.full_name}, how can I help you today?`,
+            role: "assistant",
+            timestamp: new Date(),
+          }])
+        }
+      }
+    }
+    fetchUserData()
+  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -28,6 +68,10 @@ export function ChatbotInterface() {
   useEffect(() => {
     scrollToBottom()
   }, [messages, streamedMessage])
+
+  const handleQuestionClick = (question: string) => {
+    setInput(question)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -134,6 +178,20 @@ export function ChatbotInterface() {
             )}
             <div ref={messagesEndRef} />
           </div>
+          {messages.length === 1 && (
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {defaultQuestions.map((question, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className="text-left"
+                  onClick={() => handleQuestionClick(question)}
+                >
+                  {question}
+                </Button>
+              ))}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
             <Input
               value={input}
