@@ -147,13 +147,22 @@ export function ChatbotInterface() {
                   <AvatarFallback>{message.role === "user" ? "U" : "N"}</AvatarFallback>
                 </Avatar>
                 <div
-                  className={`rounded-lg px-4 py-2 ${
+                  className={`rounded-lg px-4 py-2 max-w-[80%] ${
                     message.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <p className="whitespace-pre-line leading-relaxed">
+                      {message.content.split('\n').map((line, i) => (
+                        <span key={i}>
+                          {line}
+                          <br />
+                        </span>
+                      ))}
+                    </p>
+                  </div>
                   <p className="mt-1 text-xs opacity-70">
                     {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
@@ -166,13 +175,20 @@ export function ChatbotInterface() {
                   <AvatarImage src="/nutribyte-avatar.png" alt="Nutribyte" />
                   <AvatarFallback>N</AvatarFallback>
                 </Avatar>
-                <div className="rounded-lg bg-muted px-4 py-2">
-                  <span className="text-sm whitespace-pre-line">
-                    {streamedMessage}
-                    {isLoading && !streamedMessage && (
-                      <span className="inline-block animate-bounce">...</span>
-                    )}
-                  </span>
+                <div className="rounded-lg bg-muted px-4 py-2 max-w-[80%]">
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <p className="whitespace-pre-line leading-relaxed">
+                      {streamedMessage.split('\n').map((line, i) => (
+                        <span key={i}>
+                          {line}
+                          <br />
+                        </span>
+                      ))}
+                      {isLoading && !streamedMessage && (
+                        <span className="inline-block animate-bounce">...</span>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
