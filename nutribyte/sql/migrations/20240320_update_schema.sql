@@ -1,3 +1,9 @@
+-- Drop existing tables if they exist (in reverse order of dependencies)
+DROP TABLE IF EXISTS public.workout_plans CASCADE;
+DROP TABLE IF EXISTS public.nutrition_plans CASCADE;
+DROP TABLE IF EXISTS public.fitness_data CASCADE;
+DROP TABLE IF EXISTS public.user_profiles CASCADE;
+
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 

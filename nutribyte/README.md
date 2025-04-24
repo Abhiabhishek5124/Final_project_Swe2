@@ -1,121 +1,82 @@
-# Nutribyte - Personalized Nutrition & Fitness
+# NutriByte - Your Personal Health & Nutrition Companion
 
-A web application that provides personalized nutrition and fitness plans based on user goals and preferences.
+NutriByte is a comprehensive health and nutrition tracking application that helps users monitor their fitness goals, track their nutrition, and maintain a healthy lifestyle. The application provides personalized insights based on user data and offers tools for managing diet and exercise routines.
+
+## Features
+
+- **Personal Profile Management**: Store and update your personal information, fitness goals, and dietary preferences
+- **Health Status Monitoring**: Track your BMI and overall health status with visual indicators
+- **Nutrition Tracking**: Monitor your daily calorie intake and nutritional values
+- **Fitness Goals**: Set and track progress towards your fitness objectives
+- **Dietary Preferences**: Specify dietary restrictions and preferences for personalized recommendations
+- **AI-Powered Chatbot**: Get instant answers to your health and nutrition questions with our intelligent chatbot
+- **Personalized Workout Plans**: Receive customized workout routines based on your fitness level and goals
+- **Nutrition Plans**: Get tailored meal plans and dietary recommendations based on your preferences and requirements
+- **Progress Tracking**: Monitor your fitness journey with detailed analytics and progress reports
 
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- Node.js (v18 or later)
-- npm or pnpm (recommended)
-- Git
+- Node.js (v18 or higher)
+- npm (v9 or higher)
+- A Supabase account (for backend services)
 
-## Getting Started
+## Setup Instructions
 
 1. **Clone the repository**
 
-```bash
-git clone <repository-url>
-cd nutribyte
-```
+   ```bash
+   git clone [your-repository-url]
+   cd nutribyte
+   ```
 
 2. **Install dependencies**
 
-```bash
-# Using npm
-npm install
+   ```bash
+   npm install --force
+   ```
 
-# OR using pnpm (recommended)
-pnpm install
-```
-
-3. **Set up Supabase**
-
-- Go to [Supabase](https://supabase.com) and create a new project
-- Once created, go to Project Settings > API
-- Copy the following values:
-  - Project URL
-  - `anon` public key
-  - `service_role` secret key
-
-4. **Configure Environment Variables**
+3. **Environment Setup**
    Create a `.env` file in the root directory with the following variables:
 
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_project_url_here
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
-SUPABASE_URL=your_project_url_here
-SUPABASE_ANON_KEY=your_anon_key_here
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
-```
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-5. **Set up the Database**
+   Replace `your_supabase_url` and `your_supabase_anon_key` with your actual Supabase credentials.
 
-- Go to your Supabase project dashboard
-- Navigate to SQL Editor
-- Copy and paste the contents of `sql/schema.sql` into the editor
-- Run the SQL script to create the necessary tables and policies
+4. **Run the development server**
 
-## Running the Application
+   ```bash
+   npm run dev
+   ```
 
-1. **Development Mode**
-
-```bash
-# Using npm
-npm run dev
-
-# OR using pnpm
-pnpm dev
-```
-
-The application will be available at `http://localhost:3000`
-
-2. **Build for Production**
-
-```bash
-# Using npm
-npm run build
-npm start
-
-# OR using pnpm
-pnpm build
-pnpm start
-```
+5. **Open the application**
+   Visit `http://localhost:3000` in your web browser
 
 ## Project Structure
 
 ```
 nutribyte/
 ├── app/                    # Next.js app directory
-│   ├── api/               # API routes
-│   ├── auth/              # Authentication pages
-│   ├── dashboard/         # Dashboard pages
-│   └── ...
-├── components/            # Reusable UI components
-├── lib/                   # Utility functions and configurations
-├── public/               # Static assets
-├── sql/                  # Database schema and migrations
-├── styles/               # Global styles
-└── types/                # TypeScript type definitions
+├── components/            # React components
+│   ├── dashboard/        # Dashboard-related components
+│   └── ui/              # Reusable UI components
+├── lib/                  # Utility functions and configurations
+├── types/               # TypeScript type definitions
+└── public/              # Static assets
 ```
-
-## Features
-
-- User Authentication (Sign up, Login)
-- Personalized Fitness Data Collection
-- Nutrition Plan Generation
-- Workout Plan Generation
-- Dashboard with Progress Tracking
 
 ## Technologies Used
 
-- Next.js 15
-- React 19
-- TypeScript
-- Supabase (Database & Authentication)
-- Tailwind CSS
-- Shadcn UI Components
+- **Frontend**: Next.js, React, TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Shadcn/ui
+- **Backend**: Supabase
+- **Authentication**: Supabase Auth
+- **Database**: Supabase PostgreSQL
 
 ## Contributing
 
@@ -127,4 +88,13 @@ nutribyte/
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, please open an issue in the GitHub repository or contact the development team.
+
+## Acknowledgments
+
+- Thanks to all contributors who have helped shape this project
+- Special thanks to the open-source community for their invaluable tools and libraries

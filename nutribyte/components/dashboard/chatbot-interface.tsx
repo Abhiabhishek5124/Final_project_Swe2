@@ -39,7 +39,6 @@ export function ChatbotInterface() {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [streamedMessage, setStreamedMessage] = useState("")
-  const [userName, setUserName] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const supabase = createBrowserClient<Database>(
@@ -52,14 +51,14 @@ export function ChatbotInterface() {
     if (session) {
       const { data: userProfile } = await supabase
         .from("user_profiles")
-        .select("full_name")
+        .select("first_name, last_name")
         .eq("id", session.user.id)
         .single()
       
       if (userProfile) {
         setMessages([{
           id: "welcome",
-          content: `Hi ${userProfile.full_name}, how can I help you today?`,
+          content: `Hi ${userProfile.first_name}, how can I help you today?`,
           role: "assistant",
           timestamp: new Date(),
         }])

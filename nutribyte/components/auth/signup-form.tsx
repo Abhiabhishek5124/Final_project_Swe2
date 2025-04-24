@@ -19,7 +19,8 @@ import { useLoadingState } from "@/hooks/useLoadingState"
 export function SignUpForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [fullName, setFullName] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const { loading, stage, error, withLoading } = useLoadingState()
   const router = useRouter()
   const { toast } = useToast()
@@ -39,7 +40,8 @@ export function SignUpForm() {
           password,
           options: {
             data: {
-              full_name: fullName,
+              first_name: firstName,
+              last_name: lastName,
             },
           },
         })
@@ -53,11 +55,11 @@ export function SignUpForm() {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${data.session.access_token}`
-              
             },
             body: JSON.stringify({
               id: data.user.id,
-              fullName,
+              firstName,
+              lastName,
               email,
             }),
           })
@@ -117,15 +119,27 @@ export function SignUpForm() {
             />
           )}
           
-          <div className="grid gap-2">
-            <Label htmlFor="fullName">Full Name</Label>
-            <Input
-              id="fullName"
-              placeholder="John Doe"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                placeholder="John"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                placeholder="Doe"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
