@@ -1,10 +1,10 @@
-import OpenAI from 'openai'
+// import OpenAI from 'openai'
+import Groq from "groq-sdk"
 import { NextRequest } from 'next/server'
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL,
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 })
 
 const systemPrompt = {
@@ -67,25 +67,16 @@ Please use this information to provide personalized advice.`
       }
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
       messages: [finalSystemPrompt, ...messages],
       temperature: 0.7,
       max_tokens: 500,
     })
-    console.log(response)
-    const originalContent = response.choices?.[0]?.message?.content || ''
-    let extractedContent = ''
 
-    try {
-      const parsed = JSON.parse(originalContent)
-      extractedContent = parsed.content || ''
-    } catch (e) {
-      console.warn('Failed to parse inner content as JSON. Using raw content.')
-      extractedContent = originalContent
-    }
+    const content = response.choices[0]?.message?.content || ''
 
-    return new Response(extractedContent, {
+    return new Response(content, {
       headers: { 'Content-Type': 'text/plain' },
     })
   } catch (err: any) {
