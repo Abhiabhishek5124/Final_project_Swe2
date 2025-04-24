@@ -8,51 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 
 export function ContactForm() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    try {
-      // Here you would typically send the form data to your backend
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
-
-      toast({
-        title: "Message Sent",
-        description: "Thank you for contacting us. We'll get back to you soon!",
-      })
-
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again later.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
 
   return (
     <Card>
@@ -60,7 +17,11 @@ export function ContactForm() {
         <CardTitle>Send us a Message</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form 
+          action="https://formspree.io/f/xpwdzbwg" 
+          method="POST"
+          className="space-y-4"
+        >
           <div className="grid gap-4">
             <div className="grid gap-2">
               <label htmlFor="name" className="text-sm font-medium">
@@ -69,8 +30,6 @@ export function ContactForm() {
               <Input
                 id="name"
                 name="name"
-                value={formData.name}
-                onChange={handleChange}
                 placeholder="Your name"
                 required
                 disabled={isSubmitting}
@@ -84,8 +43,6 @@ export function ContactForm() {
                 id="email"
                 name="email"
                 type="email"
-                value={formData.email}
-                onChange={handleChange}
                 placeholder="your@email.com"
                 required
                 disabled={isSubmitting}
@@ -98,8 +55,6 @@ export function ContactForm() {
               <Input
                 id="subject"
                 name="subject"
-                value={formData.subject}
-                onChange={handleChange}
                 placeholder="What's this about?"
                 required
                 disabled={isSubmitting}
@@ -112,8 +67,6 @@ export function ContactForm() {
               <Textarea
                 id="message"
                 name="message"
-                value={formData.message}
-                onChange={handleChange}
                 placeholder="Type your message here..."
                 required
                 disabled={isSubmitting}
