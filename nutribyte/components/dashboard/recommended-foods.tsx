@@ -2,38 +2,85 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useEffect, useState } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
 
-const recommendedFoods = [
-  {
-    name: "Grilled Salmon",
-    calories: 367,
-    protein: 40,
-    carbs: 0,
-    fat: 22,
-    benefits: ["High in Omega-3", "Rich in Protein"],
-    time: "Dinner"
-  },
-  {
-    name: "Quinoa Bowl",
-    calories: 222,
-    protein: 8,
-    carbs: 39,
-    fat: 4,
-    benefits: ["Complete Protein", "High in Fiber"],
-    time: "Lunch"
-  },
-  {
-    name: "Greek Yogurt with Berries",
-    calories: 150,
-    protein: 12,
-    carbs: 20,
-    fat: 2,
-    benefits: ["Probiotics", "Antioxidants"],
-    time: "Snack"
-  }
-]
+interface FoodRecommendation {
+  name: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  benefits: string[]
+  time: string
+}
 
 export function RecommendedFoods() {
+  const [recommendedFoods, setRecommendedFoods] = useState<FoodRecommendation[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchRecommendedFoods() {
+      try {
+        const response = await fetch('/api/recommended-foods')
+        if (!response.ok) {
+          throw new Error('Failed to fetch recommendations')
+        }
+        const data = await response.json()
+        setRecommendedFoods(data.recommendations)
+      } catch (err) {
+        setError("Failed to load recommended foods")
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchRecommendedFoods()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Today's Recommended Foods</CardTitle>
+          <CardDescription>Loading your personalized recommendations...</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-6 w-20" />
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+              <div className="mt-2 flex gap-2">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-20" />
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Today's Recommended Foods</CardTitle>
+          <CardDescription>{error}</CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
