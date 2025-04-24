@@ -2,6 +2,10 @@
 
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, ReferenceLine } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
+import { HealthStatus } from "./health-status"
+import { createBrowserClient } from "@supabase/ssr"
+import type { Database } from "@/types/supabase"
+import { useEffect, useState } from "react"
 
 // Sample data - in a real app, this would come from the database
 const data = [
@@ -41,48 +45,83 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 }
 
 export function Overview() {
+  const [fitnessData, setFitnessData] = useState<any>(null)
+  const supabase = createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  useEffect(() => {
+    async function fetchFitnessData() {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        return
+      }
+
+      const { data } = await supabase
+        .from("fitness_data")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .single()
+
+      if (data) {
+        setFitnessData(data)
+      }
+    }
+
+    fetchFitnessData()
+  }, [supabase])
+
+  if (!fitnessData) {
+    return null
+  }
+
   return (
-    <ChartContainer
-      config={{
-        calories: {
-          label: "Calories (kcal)",
-          color: "hsl(var(--chart-1))",
-        },
-        goal: {
-          label: "Daily Goal",
-          color: "hsl(var(--muted))",
-        },
-      }}
-      className="h-[300px]"
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-          <XAxis
-            dataKey="date"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={10}
-            className="text-sm text-muted-foreground"
-          />
-          <YAxis 
-            tickLine={false} 
-            axisLine={false} 
-            tickMargin={10} 
-            className="text-sm text-muted-foreground"
-            domain={[1500, 2500]}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <ReferenceLine y={2000} stroke="hsl(var(--muted))" strokeDasharray="3 3" />
-          <Line 
-            type="monotone" 
-            dataKey="calories" 
-            strokeWidth={2} 
-            activeDot={{ r: 6 }} 
-            stroke="hsl(var(--chart-1))"
-            dot={{ r: 4 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </ChartContainer>
+    <div className="space-y-4">
+      <HealthStatus fitnessData={fitnessData} />
+      <ChartContainer
+        config={{
+          calories: {
+            label: "Calories (kcal)",
+            color: "hsl(var(--chart-1))",
+          },
+          goal: {
+            label: "Daily Goal",
+            color: "hsl(var(--muted))",
+          },
+        }}
+        className="h-[300px]"
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              className="text-sm text-muted-foreground"
+            />
+            <YAxis 
+              tickLine={false} 
+              axisLine={false} 
+              tickMargin={10} 
+              className="text-sm text-muted-foreground"
+              domain={[1500, 2500]}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <ReferenceLine y={2000} stroke="hsl(var(--muted))" strokeDasharray="3 3" />
+            <Line 
+              type="monotone" 
+              dataKey="calories" 
+              strokeWidth={2} 
+              activeDot={{ r: 6 }} 
+              stroke="hsl(var(--chart-1))"
+              dot={{ r: 4 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </div>
   )
 }

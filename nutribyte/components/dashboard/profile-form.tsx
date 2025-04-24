@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
+import { CheckCircle2 } from "lucide-react"
 
 interface FormData {
   firstName: string
@@ -112,8 +113,14 @@ export function ProfileForm({ userProfile, fitnessData }: ProfileFormProps) {
       if (fitnessError) throw fitnessError
 
       toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+        title: (
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <span>Profile Updated Successfully</span>
+          </div>
+        ),
+        description: "Your profile information has been saved and updated.",
+        duration: 5000,
       })
 
       router.refresh()
