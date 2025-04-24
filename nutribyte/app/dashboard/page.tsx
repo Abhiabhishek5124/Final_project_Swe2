@@ -112,7 +112,7 @@ export default async function DashboardPage() {
               <Overview />
             </CardContent>
           </Card>
-          <FoodCaloriesDisplay />
+          <RecommendedFoods />
         </div>
 
         <div className="col-span-3 space-y-4">
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
               <RecentActivity />
             </CardContent>
           </Card>
-          <RecommendedFoods />
+          <FoodCaloriesDisplay />
         </div>
       </div>
 

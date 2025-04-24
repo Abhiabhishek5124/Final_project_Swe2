@@ -120,68 +120,53 @@ export function RecentActivity() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Loading your activity history...</CardDescription>
-        </CardHeader>
-      </Card>
+      <div>
+        <div className="text-center py-6 text-muted-foreground">
+          Loading your activity history...
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Your latest nutrition and fitness updates</CardDescription>
+    <div>
+      {activities.length === 0 ? (
+        <div className="text-center py-6 text-muted-foreground">
+          No activities recorded yet
         </div>
-        {activities.length > 0 && (
-          <Button variant="outline" size="sm" onClick={handleClearActivities}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Clear All
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        {activities.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground">
-            No activities recorded yet
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Activity</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Details</TableHead>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Activity</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Details</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {activities.map((activity) => (
+              <TableRow key={activity.id}>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {getActivityIcon(activity.type)}
+                    {activity.title}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline">
+                    {getActivityType(activity.type)}
+                  </Badge>
+                </TableCell>
+                <TableCell>{formatDate(activity.date)}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {activity.details}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activities.map((activity) => (
-                <TableRow key={activity.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {getActivityIcon(activity.type)}
-                      {activity.title}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {getActivityType(activity.type)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{formatDate(activity.date)}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {activity.details}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </div>
   )
 }

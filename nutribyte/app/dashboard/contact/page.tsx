@@ -46,7 +46,7 @@ export default async function ContactPage() {
               </div>
               <div>
                 <h4 className="font-medium">Phone Support</h4>
-                <p className="text-sm text-muted-foreground">+1 (555) 123-4567</p>
+                <p className="text-sm text-muted-foreground">+1 (555) 987-6543</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -69,7 +69,7 @@ export default async function ContactPage() {
               </div>
               <div>
                 <h4 className="font-medium">Email Support</h4>
-                <p className="text-sm text-muted-foreground">support@nutribyte.com</p>
+                <p className="text-sm text-muted-foreground">nutribyte.inc@gmail.com</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -92,7 +92,7 @@ export default async function ContactPage() {
               </div>
               <div>
                 <h4 className="font-medium">Office Location</h4>
-                <p className="text-sm text-muted-foreground">123 Fitness Street, Health City, HC 12345</p>
+                <p className="text-sm text-muted-foreground">10 Campbell Drive, Highland Heights, Kentucky, 41076</p>
               </div>
             </div>
           </div>
