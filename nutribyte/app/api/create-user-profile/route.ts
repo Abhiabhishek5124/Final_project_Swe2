@@ -3,10 +3,10 @@ import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   try {
-    const { id, fullName, email } = await request.json()
+    const { id, firstName, lastName, email } = await request.json()
     const authHeader = request.headers.get("Authorization") || ""
 
-    if (!id || !fullName || !email) {
+    if (!id || !firstName || !lastName || !email) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -35,7 +35,8 @@ export async function POST(request: Request) {
       .from('user_profiles')
       .insert({ 
         id, 
-        full_name: fullName, 
+        first_name: firstName,
+        last_name: lastName,
         email,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()

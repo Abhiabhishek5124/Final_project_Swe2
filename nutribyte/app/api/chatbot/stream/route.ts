@@ -45,6 +45,12 @@ export async function POST(req: NextRequest) {
     let finalSystemPrompt = systemPrompt
     
     if (session) {
+      const { data: userProfile } = await supabase
+        .from("user_profiles")
+        .select("first_name, last_name")
+        .eq("id", session.user.id)
+        .single()
+
       const { data: fitnessData } = await supabase
         .from("fitness_data")
         .select("*")
@@ -57,11 +63,15 @@ export async function POST(req: NextRequest) {
         content: `${systemPrompt.content}
 
 Current user data:
-- Height: ${fitnessData?.height} cm
-- Weight: ${fitnessData?.weight} kg
-- Fitness Goal: ${fitnessData?.fitness_goal}
-- Available Time: ${fitnessData?.available_time}
+- Name: ${userProfile?.first_name} ${userProfile?.last_name}
+- Age: ${fitnessData?.age || "Not specified"}
+- Gender: ${fitnessData?.gender || "Not specified"}
+- Height: ${fitnessData?.height_inches || "Not specified"} inches
+- Weight: ${fitnessData?.weight || "Not specified"} kg
+- Fitness Goal: ${fitnessData?.fitness_goal || "Not specified"}
+- Available Time: ${fitnessData?.available_time || "Not specified"}
 - Dietary Preferences: ${fitnessData?.dietary_preferences || "None specified"}
+- Dietary Restrictions: ${fitnessData?.dietary_restrictions || "None specified"}
 
 Please use this information to provide personalized advice.`
       }

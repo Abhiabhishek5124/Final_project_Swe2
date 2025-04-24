@@ -41,7 +41,7 @@ export default async function DashboardPage() {
   return (
     <DashboardShell>
       <DashboardHeader
-        heading={`Welcome back, ${userProfile?.full_name?.split(' ')[0] || 'there'}! 👋`}
+        heading={`Welcome back, ${userProfile?.first_name || 'there'}! 👋`}
         text="Here's your personalized nutrition and fitness overview for today."
       />
       

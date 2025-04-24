@@ -8,7 +8,8 @@ export interface Database {
           id: string
           created_at: string
           updated_at: string
-          full_name: string | null
+          first_name: string
+          last_name: string
           email: string
           avatar_url: string | null
         }
@@ -16,7 +17,8 @@ export interface Database {
           id: string
           created_at?: string
           updated_at?: string
-          full_name?: string | null
+          first_name: string
+          last_name: string
           email: string
           avatar_url?: string | null
         }
@@ -24,7 +26,8 @@ export interface Database {
           id?: string
           created_at?: string
           updated_at?: string
-          full_name?: string | null
+          first_name?: string
+          last_name?: string
           email?: string
           avatar_url?: string | null
         }
@@ -35,11 +38,13 @@ export interface Database {
           user_id: string
           created_at: string
           updated_at: string
-          height: number
+          age: number
+          gender: string
+          height_inches: number
           weight: number
           fitness_goal: string
-          timeframe: string
           available_time: string
+          dietary_restrictions: string | null
           dietary_preferences: string | null
         }
         Insert: {
@@ -47,11 +52,13 @@ export interface Database {
           user_id: string
           created_at?: string
           updated_at?: string
-          height: number
+          age: number
+          gender: string
+          height_inches: number
           weight: number
           fitness_goal: string
-          timeframe: string
           available_time: string
+          dietary_restrictions?: string | null
           dietary_preferences?: string | null
         }
         Update: {
@@ -59,11 +66,13 @@ export interface Database {
           user_id?: string
           created_at?: string
           updated_at?: string
-          height?: number
+          age?: number
+          gender?: string
+          height_inches?: number
           weight?: number
           fitness_goal?: string
-          timeframe?: string
           available_time?: string
+          dietary_restrictions?: string | null
           dietary_preferences?: string | null
         }
       }

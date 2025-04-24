@@ -18,14 +18,31 @@ import { Spinner } from "@/components/loaders/spinner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLoadingState } from "@/hooks/useLoadingState"
 
+interface FormData {
+  firstName: string
+  lastName: string
+  age: string
+  gender: string
+  heightInches: string
+  weight: string
+  fitnessGoal: string
+  availableTime: string
+  dietaryRestrictions: string
+  dietaryPreferences: string
+}
+
 export function OnboardingForm() {
   const { loading, stage, error, withLoading } = useLoadingState()
-  const [formData, setFormData] = useState({
-    height: "",
+  const [formData, setFormData] = useState<FormData>({
+    firstName: "",
+    lastName: "",
+    age: "",
+    gender: "",
+    heightInches: "",
     weight: "",
     fitnessGoal: "",
-    timeframe: "",
     availableTime: "",
+    dietaryRestrictions: "",
     dietaryPreferences: "",
   })
   const router = useRouter()
@@ -54,14 +71,30 @@ export function OnboardingForm() {
         if (!user) {
           throw new Error("User not authenticated")
         }
+
+        // Update user profile with first and last name
+        const { error: profileError } = await supabase
+          .from("user_profiles")
+          .update({
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id)
+
+        if (profileError) throw profileError
+
+        // Insert fitness data
         const { error } = await supabase.from("fitness_data").insert({
           user_id: user.id,
-          height: formData.height,
-          weight: formData.weight,
+          age: parseInt(formData.age),
+          gender: formData.gender,
+          height_inches: parseFloat(formData.heightInches),
+          weight: parseFloat(formData.weight),
           fitness_goal: formData.fitnessGoal,
-          timeframe: formData.timeframe,
           available_time: formData.availableTime,
-          dietary_preferences: formData.dietaryPreferences,
+          dietary_restrictions: formData.dietaryRestrictions || null,
+          dietary_preferences: formData.dietaryPreferences || null,
         })
         if (error) throw error
         toast({
@@ -113,14 +146,65 @@ export function OnboardingForm() {
           )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="height">Height (cm)</Label>
+              <Label htmlFor="firstName">First Name</Label>
               <Input
-                id="height"
-                name="height"
-                type="number"
-                placeholder="175"
+                id="firstName"
+                name="firstName"
+                placeholder="John"
                 required
-                value={formData.height}
+                value={formData.firstName}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                placeholder="Doe"
+                required
+                value={formData.lastName}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="age">Age</Label>
+              <Input
+                id="age"
+                name="age"
+                type="number"
+                placeholder="25"
+                required
+                value={formData.age}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender</Label>
+              <Select required onValueChange={(value) => handleSelectChange("gender", value)}>
+                <SelectTrigger id="gender">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="heightInches">Height (inches)</Label>
+              <Input
+                id="heightInches"
+                name="heightInches"
+                type="number"
+                placeholder="70"
+                required
+                value={formData.heightInches}
                 onChange={handleChange}
               />
             </div>
@@ -148,20 +232,7 @@ export function OnboardingForm() {
                 <SelectItem value="gain_muscle">Gain Muscle</SelectItem>
                 <SelectItem value="maintain">Maintain</SelectItem>
                 <SelectItem value="improve_fitness">Improve Fitness</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="timeframe">Timeframe</Label>
-            <Select required onValueChange={(value) => handleSelectChange("timeframe", value)}>
-              <SelectTrigger id="timeframe">
-                <SelectValue placeholder="Select a timeframe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1_month">1 Month</SelectItem>
-                <SelectItem value="3_months">3 Months</SelectItem>
-                <SelectItem value="6_months">6 Months</SelectItem>
-                <SelectItem value="12_months">12 Months</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -177,6 +248,26 @@ export function OnboardingForm() {
                 <SelectItem value="1_hour_3x_week">1 hour, 3x per week</SelectItem>
                 <SelectItem value="1_hour_5x_week">1 hour, 5x per week</SelectItem>
                 <SelectItem value="2_hours_3x_week">2 hours, 3x per week</SelectItem>
+                <SelectItem value="2_hours_5x_week">2 hours, 5x per week</SelectItem>
+                <SelectItem value="3_hours_3x_week">3 hours, 3x per week</SelectItem>
+                <SelectItem value="3_hours_5x_week">3 hours, 5x per week</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dietaryRestrictions">Dietary Restrictions</Label>
+            <Select onValueChange={(value) => handleSelectChange("dietaryRestrictions", value)}>
+              <SelectTrigger id="dietaryRestrictions">
+                <SelectValue placeholder="Select dietary restrictions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                <SelectItem value="vegan">Vegan</SelectItem>
+                <SelectItem value="gluten_free">Gluten-Free</SelectItem>
+                <SelectItem value="dairy_free">Dairy-Free</SelectItem>
+                <SelectItem value="nut_free">Nut-Free</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -185,7 +276,7 @@ export function OnboardingForm() {
             <Textarea
               id="dietaryPreferences"
               name="dietaryPreferences"
-              placeholder="E.g., vegetarian, vegan, gluten-free, etc."
+              placeholder="E.g., prefer low-carb meals, avoid spicy food, etc."
               value={formData.dietaryPreferences}
               onChange={handleChange}
             />

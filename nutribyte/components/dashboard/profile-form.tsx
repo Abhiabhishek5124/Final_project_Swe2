@@ -14,20 +14,50 @@ import { useToast } from "@/components/ui/use-toast"
 import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
 
+interface FormData {
+  firstName: string
+  lastName: string
+  age: string
+  gender: string
+  heightInches: string
+  weight: string
+  fitnessGoal: string
+  availableTime: string
+  dietaryRestrictions: string
+  dietaryPreferences: string
+}
+
 interface ProfileFormProps {
-  userProfile: any
-  fitnessData: any
+  userProfile: {
+    id: string
+    first_name: string
+    last_name: string
+  }
+  fitnessData: {
+    id: string
+    age: number
+    gender: string
+    height_inches: number
+    weight: number
+    fitness_goal: string
+    available_time: string
+    dietary_restrictions: string | null
+    dietary_preferences: string | null
+  }
 }
 
 export function ProfileForm({ userProfile, fitnessData }: ProfileFormProps) {
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    fullName: userProfile?.full_name || "",
-    height: fitnessData?.height || "",
-    weight: fitnessData?.weight || "",
+  const [formData, setFormData] = useState<FormData>({
+    firstName: userProfile?.first_name || "",
+    lastName: userProfile?.last_name || "",
+    age: fitnessData?.age?.toString() || "",
+    gender: fitnessData?.gender || "",
+    heightInches: fitnessData?.height_inches?.toString() || "",
+    weight: fitnessData?.weight?.toString() || "",
     fitnessGoal: fitnessData?.fitness_goal || "",
-    timeframe: fitnessData?.timeframe || "",
     availableTime: fitnessData?.available_time || "",
+    dietaryRestrictions: fitnessData?.dietary_restrictions || "",
     dietaryPreferences: fitnessData?.dietary_preferences || "",
   })
   const router = useRouter()
@@ -55,7 +85,8 @@ export function ProfileForm({ userProfile, fitnessData }: ProfileFormProps) {
       const { error: profileError } = await supabase
         .from("user_profiles")
         .update({
-          full_name: formData.fullName,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
           updated_at: new Date().toISOString(),
         })
         .eq("id", userProfile.id)
@@ -66,12 +97,14 @@ export function ProfileForm({ userProfile, fitnessData }: ProfileFormProps) {
       const { error: fitnessError } = await supabase
         .from("fitness_data")
         .update({
-          height: formData.height,
-          weight: formData.weight,
+          age: parseInt(formData.age),
+          gender: formData.gender,
+          height_inches: parseFloat(formData.heightInches),
+          weight: parseFloat(formData.weight),
           fitness_goal: formData.fitnessGoal,
-          timeframe: formData.timeframe,
           available_time: formData.availableTime,
-          dietary_preferences: formData.dietaryPreferences,
+          dietary_restrictions: formData.dietaryRestrictions || null,
+          dietary_preferences: formData.dietaryPreferences || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", fitnessData.id)
@@ -105,23 +138,87 @@ export function ProfileForm({ userProfile, fitnessData }: ProfileFormProps) {
             <CardDescription>Update your personal information and preferences.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input id="fullName" name="fullName" value={formData.fullName} onChange={handleChange} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="height">Height (cm)</Label>
-                <Input id="height" name="height" type="number" value={formData.height} onChange={handleChange} />
+                <Label htmlFor="age">Age</Label>
+                <Input
+                  id="age"
+                  name="age"
+                  type="number"
+                  value={formData.age}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender</Label>
+                <Select
+                  value={formData.gender}
+                  onValueChange={(value) => handleSelectChange("gender", value)}
+                >
+                  <SelectTrigger id="gender">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="heightInches">Height (inches)</Label>
+                <Input
+                  id="heightInches"
+                  name="heightInches"
+                  type="number"
+                  value={formData.heightInches}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="weight">Weight (kg)</Label>
-                <Input id="weight" name="weight" type="number" value={formData.weight} onChange={handleChange} />
+                <Input
+                  id="weight"
+                  name="weight"
+                  type="number"
+                  value={formData.weight}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="fitnessGoal">Fitness Goal</Label>
-              <Select value={formData.fitnessGoal} onValueChange={(value) => handleSelectChange("fitnessGoal", value)}>
+              <Select
+                value={formData.fitnessGoal}
+                onValueChange={(value) => handleSelectChange("fitnessGoal", value)}
+              >
                 <SelectTrigger id="fitnessGoal">
                   <SelectValue placeholder="Select a fitness goal" />
                 </SelectTrigger>
@@ -130,20 +227,7 @@ export function ProfileForm({ userProfile, fitnessData }: ProfileFormProps) {
                   <SelectItem value="gain_muscle">Gain Muscle</SelectItem>
                   <SelectItem value="maintain">Maintain</SelectItem>
                   <SelectItem value="improve_fitness">Improve Fitness</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="timeframe">Timeframe</Label>
-              <Select value={formData.timeframe} onValueChange={(value) => handleSelectChange("timeframe", value)}>
-                <SelectTrigger id="timeframe">
-                  <SelectValue placeholder="Select a timeframe" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1_month">1 Month</SelectItem>
-                  <SelectItem value="3_months">3 Months</SelectItem>
-                  <SelectItem value="6_months">6 Months</SelectItem>
-                  <SelectItem value="12_months">12 Months</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -162,6 +246,29 @@ export function ProfileForm({ userProfile, fitnessData }: ProfileFormProps) {
                   <SelectItem value="1_hour_3x_week">1 hour, 3x per week</SelectItem>
                   <SelectItem value="1_hour_5x_week">1 hour, 5x per week</SelectItem>
                   <SelectItem value="2_hours_3x_week">2 hours, 3x per week</SelectItem>
+                  <SelectItem value="2_hours_5x_week">2 hours, 5x per week</SelectItem>
+                  <SelectItem value="3_hours_3x_week">3 hours, 3x per week</SelectItem>
+                  <SelectItem value="3_hours_5x_week">3 hours, 5x per week</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dietaryRestrictions">Dietary Restrictions</Label>
+              <Select
+                value={formData.dietaryRestrictions}
+                onValueChange={(value) => handleSelectChange("dietaryRestrictions", value)}
+              >
+                <SelectTrigger id="dietaryRestrictions">
+                  <SelectValue placeholder="Select dietary restrictions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                  <SelectItem value="vegan">Vegan</SelectItem>
+                  <SelectItem value="gluten_free">Gluten-Free</SelectItem>
+                  <SelectItem value="dairy_free">Dairy-Free</SelectItem>
+                  <SelectItem value="nut_free">Nut-Free</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -170,7 +277,7 @@ export function ProfileForm({ userProfile, fitnessData }: ProfileFormProps) {
               <Textarea
                 id="dietaryPreferences"
                 name="dietaryPreferences"
-                placeholder="E.g., vegetarian, vegan, gluten-free, etc."
+                placeholder="E.g., prefer low-carb meals, avoid spicy food, etc."
                 value={formData.dietaryPreferences}
                 onChange={handleChange}
               />
