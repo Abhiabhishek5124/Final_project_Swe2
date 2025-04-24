@@ -35,11 +35,14 @@ export default async function WorkoutsPage() {
     <DashboardShell>
       <DashboardHeader
         heading="Workout Plan"
-        text="Your personalized workout plan based on your goals and available time."
+        text="Your personalized workout routines and exercise recommendations"
       >
         <Button variant="outline">Edit Plan</Button>
         <Button>Regenerate Plan</Button>
       </DashboardHeader>
+      <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+        <p className="text-sm text-yellow-700 dark:text-yellow-300">⚠️ Under Development - This feature will be available soon. Please keep patience.</p>
+      </div>
       <Tabs defaultValue="daily" className="space-y-4">
         <TabsList>
           <TabsTrigger value="daily">Daily Workout</TabsTrigger>

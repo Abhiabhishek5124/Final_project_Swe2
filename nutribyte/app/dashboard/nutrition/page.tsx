@@ -32,11 +32,14 @@ export default async function NutritionPage() {
     <DashboardShell>
       <DashboardHeader
         heading="Nutrition Plan"
-        text="Your personalized nutrition plan based on your goals and preferences."
+        text="Your personalized nutrition recommendations and meal plans"
       >
         <Button variant="outline">Edit Plan</Button>
         <Button>Regenerate Plan</Button>
       </DashboardHeader>
+      <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+        <p className="text-sm text-yellow-700 dark:text-yellow-300">⚠️ Under Development - This feature will be available soon. Please keep patience.</p>
+      </div>
       <Tabs defaultValue="daily" className="space-y-4">
         <TabsList>
           <TabsTrigger value="daily">Daily Plan</TabsTrigger>

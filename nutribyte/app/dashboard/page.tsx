@@ -82,6 +82,9 @@ export default async function DashboardPage() {
                 ? `Updated: ${new Date(nutritionPlan.updated_at).toLocaleDateString()}`
                 : "Generate your plan now"}
             </p>
+            <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+              <p className="text-xs text-yellow-700 dark:text-yellow-300">⚠️ Under Development - This feature will be available soon. Please keep patience.</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -96,6 +99,9 @@ export default async function DashboardPage() {
                 ? `Updated: ${new Date(workoutPlan.updated_at).toLocaleDateString()}`
                 : "Generate your plan now"}
             </p>
+            <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+              <p className="text-xs text-yellow-700 dark:text-yellow-300">⚠️ Under Development - This feature will be available soon. Please keep patience.</p>
+            </div>
           </CardContent>
         </Card>
       </div>
