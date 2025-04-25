@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { fitnessDataId, fitnessLevel, regenerate = false } = body
+    const { fitnessDataId, fitnessLevel, regenerate = false, description } = body
 
     const { data: fitnessData, error: fitnessError } = await supabase
       .from("fitness_data")
@@ -44,13 +44,15 @@ export async function POST(request: Request) {
       }
     }
 
+    
     const workoutPlan = await generateWorkoutPlan(
       {
         fitness_goal: fitnessData.fitness_goal,
         available_time: fitnessData.available_time,
         gender: fitnessData.gender,
       },
-      fitnessLevel
+      fitnessLevel,
+      description
     )
 
     if (regenerate) {

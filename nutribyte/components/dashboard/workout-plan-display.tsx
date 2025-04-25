@@ -230,8 +230,8 @@ export function WorkoutPlanDisplay({ plan, view, planId }: WorkoutPlanDisplayPro
                       {editing ? (
                         <Input
                           type="number"
-                          value={exercise.sets}
-                          onChange={(e) => handleExerciseChange(dayIndex, index, "sets", parseInt(e.target.value))}
+                          value={exercise.sets.toString()}
+                          onChange={(e) => handleExerciseChange(dayIndex, index, "sets", parseInt(e.target.value) || 0)}
                         />
                       ) : (
                         exercise.sets
