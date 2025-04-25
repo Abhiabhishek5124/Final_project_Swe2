@@ -21,6 +21,13 @@ export default async function GeneratePage() {
     redirect("/onboarding")
   }
 
+  const { data: existingPlan } = await supabase
+    .from("workout_plans")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .eq("is_active", true)
+    .single()
+
   return (
     <DashboardShell>
       <DashboardHeader
@@ -28,7 +35,7 @@ export default async function GeneratePage() {
         text="Generate personalized nutrition and workout plans based on your goals."
       />
       <div className="grid gap-8">
-        <GeneratePlanForm fitnessData={fitnessData} />
+        <GeneratePlanForm fitnessData={fitnessData} hasExistingPlan={!!existingPlan} />
       </div>
     </DashboardShell>
   )

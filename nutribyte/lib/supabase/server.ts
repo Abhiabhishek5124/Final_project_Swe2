@@ -1,20 +1,39 @@
 // lib/supabase/server.ts
-import { cookies as nextCookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import type { Database } from '@/types/supabase'
 
 export async function createSupabaseServerClient() {
-  const cookieStore = await nextCookies();
+  const cookieStore = await cookies()
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        getAll: () => cookieStore.getAll(),
-        set: (name: string, value: string, options?: any) => cookieStore.set({ name, value, ...options }),
-        remove: (name: string, options?: any) => cookieStore.delete({ name, ...options })
-      }
+        async get(name: string) {
+          try {
+            return cookieStore.get(name)?.value
+          } catch (error) {
+            console.error('Error parsing cookie:', error)
+            return undefined
+          }
+        },
+        async set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch (error) {
+            console.error('Error setting cookie:', error)
+          }
+        },
+        async remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch (error) {
+            console.error('Error removing cookie:', error)
+          }
+        },
+      },
     }
   )
 }
