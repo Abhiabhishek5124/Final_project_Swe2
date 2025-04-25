@@ -9,25 +9,34 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 export default async function WorkoutsPage() {
   const supabase = await createSupabaseServerClient()
 
-  // Check if user is authenticated
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  // Check if user is authenticated using getUser()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (error || !user) {
     redirect("/login")
   }
 
   // Get active workout plan
-  const { data: workoutPlan } = await supabase
+  const { data: workoutPlan, error: workoutError } = await supabase
     .from("workout_plans")
     .select("*")
-    .eq("user_id", session.user.id)
+    .eq("user_id", user.id)
     .eq("is_active", true)
     .single()
 
+  if (workoutError) {
+    console.error("Error fetching workout plan:", workoutError)
+    redirect("/dashboard/generate")
+  }
+
   // If no plan exists, redirect to generate plan
   if (!workoutPlan) {
+    redirect("/dashboard/generate")
+  }
+
+  // Validate plan content
+  if (!workoutPlan.plan_content || !workoutPlan.plan_content.weeklySchedule) {
+    console.error("Invalid workout plan content:", workoutPlan.plan_content)
     redirect("/dashboard/generate")
   }
 
@@ -36,13 +45,7 @@ export default async function WorkoutsPage() {
       <DashboardHeader
         heading="Workout Plan"
         text="Your personalized workout routines and exercise recommendations"
-      >
-        <Button variant="outline">Edit Plan</Button>
-        <Button>Regenerate Plan</Button>
-      </DashboardHeader>
-      <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
-        <p className="text-sm text-yellow-700 dark:text-yellow-300">⚠️ Under Development - This feature will be available soon. Please keep patience.</p>
-      </div>
+      />
       <Tabs defaultValue="daily" className="space-y-4">
         <TabsList>
           <TabsTrigger value="daily">Daily Workout</TabsTrigger>
@@ -50,13 +53,25 @@ export default async function WorkoutsPage() {
           <TabsTrigger value="exercises">Exercise Database</TabsTrigger>
         </TabsList>
         <TabsContent value="daily" className="space-y-4">
-          <WorkoutPlanDisplay plan={workoutPlan.plan_content} view="daily" />
+          <WorkoutPlanDisplay 
+            plan={{ ...workoutPlan.plan_content, fitness_data_id: workoutPlan.fitness_data_id }} 
+            view="daily" 
+            planId={workoutPlan.id} 
+          />
         </TabsContent>
         <TabsContent value="weekly" className="space-y-4">
-          <WorkoutPlanDisplay plan={workoutPlan.plan_content} view="weekly" />
+          <WorkoutPlanDisplay 
+            plan={{ ...workoutPlan.plan_content, fitness_data_id: workoutPlan.fitness_data_id }} 
+            view="weekly" 
+            planId={workoutPlan.id} 
+          />
         </TabsContent>
         <TabsContent value="exercises" className="space-y-4">
-          <WorkoutPlanDisplay plan={workoutPlan.plan_content} view="exercises" />
+          <WorkoutPlanDisplay 
+            plan={{ ...workoutPlan.plan_content, fitness_data_id: workoutPlan.fitness_data_id }} 
+            view="exercises" 
+            planId={workoutPlan.id} 
+          />
         </TabsContent>
       </Tabs>
     </DashboardShell>

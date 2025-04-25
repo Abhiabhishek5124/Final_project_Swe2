@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { generateAIPlan } from "@/lib/openai"
+import { generateWorkoutPlan } from "../groq/generate-workout-plan"
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { fitnessDataId, regenerate = false } = body
+    const { fitnessDataId, fitnessLevel, regenerate = false } = body
 
     const { data: fitnessData, error: fitnessError } = await supabase
       .from("fitness_data")
@@ -29,14 +29,6 @@ export async function POST(request: Request) {
     }
 
     if (!regenerate) {
-      const { data: existingNutritionPlan } = await supabase
-        .from("nutrition_plans")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .eq("fitness_data_id", fitnessDataId)
-        .eq("is_active", true)
-        .single()
-
       const { data: existingWorkoutPlan } = await supabase
         .from("workout_plans")
         .select("*")
@@ -45,43 +37,28 @@ export async function POST(request: Request) {
         .eq("is_active", true)
         .single()
 
-      if (existingNutritionPlan && existingWorkoutPlan) {
+      if (existingWorkoutPlan) {
         return NextResponse.json({
-          nutritionPlan: existingNutritionPlan,
           workoutPlan: existingWorkoutPlan,
         })
       }
     }
 
-    const { nutritionPlan, workoutPlan } = await generateAIPlan(fitnessData)
+    const workoutPlan = await generateWorkoutPlan(
+      {
+        fitness_goal: fitnessData.fitness_goal,
+        available_time: fitnessData.available_time,
+        gender: fitnessData.gender,
+      },
+      fitnessLevel
+    )
 
     if (regenerate) {
-      await supabase
-        .from("nutrition_plans")
-        .update({ is_active: false })
-        .eq("user_id", session.user.id)
-        .eq("is_active", true)
-
       await supabase
         .from("workout_plans")
         .update({ is_active: false })
         .eq("user_id", session.user.id)
         .eq("is_active", true)
-    }
-
-    const { data: newNutritionPlan, error: nutritionError } = await supabase
-      .from("nutrition_plans")
-      .insert({
-        user_id: session.user.id,
-        fitness_data_id: fitnessDataId,
-        plan_content: nutritionPlan,
-        is_active: true,
-      })
-      .select()
-      .single()
-
-    if (nutritionError) {
-      return NextResponse.json({ error: "Failed to save nutrition plan" }, { status: 500 })
     }
 
     const { data: newWorkoutPlan, error: workoutError } = await supabase
@@ -100,7 +77,6 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      nutritionPlan: newNutritionPlan,
       workoutPlan: newWorkoutPlan,
     })
   } catch (error) {
