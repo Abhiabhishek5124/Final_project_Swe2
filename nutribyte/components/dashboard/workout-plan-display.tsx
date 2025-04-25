@@ -155,175 +155,142 @@ export function WorkoutPlanDisplay({ plan, view, planId }: WorkoutPlanDisplayPro
     return editedPlan.weeklySchedule.find(workout => workout.day === today)
   }
 
-  if (view === "daily") {
-    const todayWorkout = getCurrentDayWorkout()
-    if (!todayWorkout) {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle>No Workout Today</CardTitle>
-            <CardDescription>Rest day or no workout scheduled for today</CardDescription>
-          </CardHeader>
-        </Card>
-      )
-    }
-
-    const dayIndex = editedPlan.weeklySchedule.findIndex(w => w.day === todayWorkout.day)
-
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-end space-x-2">
-          {editing ? (
-            <>
-              <Button onClick={handleSave}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </Button>
-              <Button variant="outline" onClick={() => setEditing(false)}>
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" onClick={() => setEditing(true)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Plan
-              </Button>
-              <Button onClick={handleRegenerate}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Regenerate Plan
-              </Button>
-            </>
-          )}
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Today's Workout: {todayWorkout.focus}</CardTitle>
-            <CardDescription>{todayWorkout.duration}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Exercise</TableHead>
-                  <TableHead>Sets</TableHead>
-                  <TableHead>Reps</TableHead>
-                  <TableHead>Rest</TableHead>
-                  <TableHead>Instructions</TableHead>
-                  {editing && <TableHead>Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {todayWorkout.exercises.map((exercise, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      {editing ? (
-                        <Input
-                          value={exercise.name}
-                          onChange={(e) => handleExerciseChange(dayIndex, index, "name", e.target.value)}
-                        />
-                      ) : (
-                        <span className="font-medium">{exercise.name}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editing ? (
-                        <Input
-                          type="number"
-                          value={exercise.sets.toString()}
-                          onChange={(e) => handleExerciseChange(dayIndex, index, "sets", parseInt(e.target.value) || 0)}
-                        />
-                      ) : (
-                        exercise.sets
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editing ? (
-                        <Input
-                          value={exercise.reps}
-                          onChange={(e) => handleExerciseChange(dayIndex, index, "reps", e.target.value)}
-                        />
-                      ) : (
-                        exercise.reps
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editing ? (
-                        <Input
-                          value={exercise.rest}
-                          onChange={(e) => handleExerciseChange(dayIndex, index, "rest", e.target.value)}
-                        />
-                      ) : (
-                        exercise.rest
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Collapsible>
-                        <CollapsibleTrigger
-                          className="flex items-center space-x-2"
-                          onClick={() => toggleExercise(exercise.name)}
-                        >
-                          {expandedExercises.has(exercise.name) ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                          <span>View Instructions</span>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          {editing ? (
-                            <Input
-                              value={exercise.description}
-                              onChange={(e) => handleExerciseChange(dayIndex, index, "description", e.target.value)}
-                            />
-                          ) : (
-                            <p className="mt-2 text-sm text-muted-foreground">
-                              {exercise.description}
-                            </p>
-                          )}
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </TableCell>
-                    {editing && (
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteExercise(dayIndex, index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {editing && (
-              <div className="mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => handleAddExercise(dayIndex)}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Exercise
-                </Button>
-              </div>
+  const renderExerciseRow = (
+    exercise: WorkoutExercise,
+    dayIndex: number,
+    exerciseIndex: number,
+    showActions: boolean = true
+  ) => (
+    <TableRow key={exerciseIndex}>
+      <TableCell>
+        {editing ? (
+          <Input
+            value={exercise.name}
+            onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "name", e.target.value)}
+          />
+        ) : (
+          <span className="font-medium">{exercise.name}</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {editing ? (
+          <Input
+            type="number"
+            value={exercise.sets.toString()}
+            onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "sets", parseInt(e.target.value) || 0)}
+          />
+        ) : (
+          exercise.sets
+        )}
+      </TableCell>
+      <TableCell>
+        {editing ? (
+          <Input
+            value={exercise.reps}
+            onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "reps", e.target.value)}
+          />
+        ) : (
+          exercise.reps
+        )}
+      </TableCell>
+      <TableCell>
+        {editing ? (
+          <Input
+            value={exercise.rest}
+            onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "rest", e.target.value)}
+          />
+        ) : (
+          exercise.rest
+        )}
+      </TableCell>
+      <TableCell>
+        <Collapsible>
+          <CollapsibleTrigger
+            className="flex items-center space-x-2"
+            onClick={() => toggleExercise(exercise.name)}
+          >
+            {expandedExercises.has(exercise.name) ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
             )}
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+            <span>View Instructions</span>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            {editing ? (
+              <Input
+                value={exercise.description}
+                onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "description", e.target.value)}
+              />
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">
+                {exercise.description}
+              </p>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+      </TableCell>
+      {showActions && editing && (
+        <TableCell>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleDeleteExercise(dayIndex, exerciseIndex)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </TableCell>
+      )}
+    </TableRow>
+  )
 
-  if (view === "weekly") {
-    return (
-      <div className="space-y-6">
-        {plan.weeklySchedule.map((workout, index) => (
-          <Card key={index}>
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end space-x-2">
+        {editing ? (
+          <>
+            <Button onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+            <Button variant="outline" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="outline" onClick={() => setEditing(true)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Plan
+            </Button>
+            <Button onClick={handleRegenerate}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Regenerate Plan
+            </Button>
+          </>
+        )}
+      </div>
+
+      {view === "daily" && (() => {
+        const todayWorkout = getCurrentDayWorkout()
+        if (!todayWorkout) {
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle>No Workout Today</CardTitle>
+                <CardDescription>Rest day or no workout scheduled for today</CardDescription>
+              </CardHeader>
+            </Card>
+          )
+        }
+
+        const dayIndex = editedPlan.weeklySchedule.findIndex(w => w.day === todayWorkout.day)
+
+        return (
+          <Card>
             <CardHeader>
-              <CardTitle>{workout.day}: {workout.focus}</CardTitle>
-              <CardDescription>{workout.duration}</CardDescription>
+              <CardTitle>Today's Workout: {todayWorkout.focus}</CardTitle>
+              <CardDescription>{todayWorkout.duration}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -334,97 +301,147 @@ export function WorkoutPlanDisplay({ plan, view, planId }: WorkoutPlanDisplayPro
                     <TableHead>Reps</TableHead>
                     <TableHead>Rest</TableHead>
                     <TableHead>Instructions</TableHead>
+                    {editing && <TableHead>Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {workout.exercises.map((exercise, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell className="font-medium">{exercise.name}</TableCell>
-                      <TableCell>{exercise.sets}</TableCell>
-                      <TableCell>{exercise.reps}</TableCell>
-                      <TableCell>{exercise.rest}</TableCell>
-                      <TableCell>
-                        <Collapsible>
-                          <CollapsibleTrigger
-                            className="flex items-center space-x-2"
-                            onClick={() => toggleExercise(exercise.name)}
-                          >
-                            {expandedExercises.has(exercise.name) ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )}
-                            <span>View Instructions</span>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            <p className="mt-2 text-sm text-muted-foreground">
-                              {exercise.description}
-                            </p>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      </TableCell>
+                  {todayWorkout.exercises.map((exercise, index) => 
+                    renderExerciseRow(exercise, dayIndex, index)
+                  )}
+                </TableBody>
+              </Table>
+              {editing && (
+                <div className="mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleAddExercise(dayIndex)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Exercise
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })()}
+
+      {view === "weekly" && (
+        <div className="space-y-6">
+          {editedPlan.weeklySchedule.map((workout, index) => (
+            <Card key={index}>
+              <CardHeader>
+                <CardTitle>{workout.day}: {workout.focus}</CardTitle>
+                <CardDescription>{workout.duration}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Exercise</TableHead>
+                      <TableHead>Sets</TableHead>
+                      <TableHead>Reps</TableHead>
+                      <TableHead>Rest</TableHead>
+                      <TableHead>Instructions</TableHead>
+                      {editing && <TableHead>Actions</TableHead>}
                     </TableRow>
-                  ))}
+                  </TableHeader>
+                  <TableBody>
+                    {workout.exercises.map((exercise, idx) => 
+                      renderExerciseRow(exercise, index, idx)
+                    )}
+                  </TableBody>
+                </Table>
+                {editing && (
+                  <div className="mt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleAddExercise(index)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Exercise
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {view === "exercises" && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Exercise Database</CardTitle>
+              <CardDescription>Detailed instructions for all exercises in your plan</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Exercise</TableHead>
+                    <TableHead>Instructions</TableHead>
+                    {editing && <TableHead>Actions</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {editedPlan.weeklySchedule.flatMap((workout, dayIndex) => 
+                    workout.exercises.map((exercise, exerciseIndex) => (
+                      <TableRow key={`${dayIndex}-${exerciseIndex}`}>
+                        <TableCell className="font-medium">{exercise.name}</TableCell>
+                        <TableCell>
+                          <Collapsible>
+                            <CollapsibleTrigger
+                              className="flex items-center space-x-2"
+                              onClick={() => toggleExercise(exercise.name)}
+                            >
+                              {expandedExercises.has(exercise.name) ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                              <span>View Instructions</span>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="mt-2 space-y-2">
+                                {editing ? (
+                                  <Input
+                                    value={exercise.description}
+                                    onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "description", e.target.value)}
+                                  />
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">{exercise.description}</p>
+                                )}
+                                <div className="text-sm">
+                                  <p><strong>Sets:</strong> {exercise.sets}</p>
+                                  <p><strong>Reps:</strong> {exercise.reps}</p>
+                                  <p><strong>Rest:</strong> {exercise.rest}</p>
+                                </div>
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        </TableCell>
+                        {editing && (
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteExercise(dayIndex, exerciseIndex)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
-        ))}
-      </div>
-    )
-  }
-
-  // Exercises view
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Exercise Database</CardTitle>
-          <CardDescription>Detailed instructions for all exercises in your plan</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Exercise</TableHead>
-                <TableHead>Instructions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {plan.weeklySchedule.flatMap(workout => workout.exercises).map((exercise, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">{exercise.name}</TableCell>
-                  <TableCell>
-                    <Collapsible>
-                      <CollapsibleTrigger
-                        className="flex items-center space-x-2"
-                        onClick={() => toggleExercise(exercise.name)}
-                      >
-                        {expandedExercises.has(exercise.name) ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                        <span>View Instructions</span>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="mt-2 space-y-2">
-                          <p className="text-sm text-muted-foreground">{exercise.description}</p>
-                          <div className="text-sm">
-                            <p><strong>Sets:</strong> {exercise.sets}</p>
-                            <p><strong>Reps:</strong> {exercise.reps}</p>
-                            <p><strong>Rest:</strong> {exercise.rest}</p>
-                          </div>
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   )
 }
