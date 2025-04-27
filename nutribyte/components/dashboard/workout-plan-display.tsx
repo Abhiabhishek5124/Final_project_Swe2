@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Edit, Save, ChevronDown, ChevronUp, Plus, Trash2, RefreshCw } from "lucide-react"
+import { Edit, Save, ChevronDown, ChevronUp, Plus, Trash2, RefreshCw, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -47,6 +47,7 @@ export function WorkoutPlanDisplay({ plan, view, planId }: WorkoutPlanDisplayPro
   const [editing, setEditing] = useState(false)
   const [editedPlan, setEditedPlan] = useState(plan)
   const [expandedExercises, setExpandedExercises] = useState<Set<string>>(new Set())
+  const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
   const { toast } = useToast()
 
@@ -161,52 +162,56 @@ export function WorkoutPlanDisplay({ plan, view, planId }: WorkoutPlanDisplayPro
     exerciseIndex: number,
     showActions: boolean = true
   ) => (
-    <TableRow key={exerciseIndex}>
-      <TableCell>
+    <TableRow key={exerciseIndex} className="group hover:bg-muted/50">
+      <TableCell className="w-[30%]">
         {editing ? (
           <Input
             value={exercise.name}
             onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "name", e.target.value)}
+            className="w-full"
           />
         ) : (
           <span className="font-medium">{exercise.name}</span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="w-[15%]">
         {editing ? (
           <Input
             type="number"
             value={exercise.sets.toString()}
             onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "sets", parseInt(e.target.value) || 0)}
+            className="w-full"
           />
         ) : (
           exercise.sets
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="w-[15%]">
         {editing ? (
           <Input
             value={exercise.reps}
             onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "reps", e.target.value)}
+            className="w-full"
           />
         ) : (
           exercise.reps
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="w-[15%]">
         {editing ? (
           <Input
             value={exercise.rest}
             onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "rest", e.target.value)}
+            className="w-full"
           />
         ) : (
           exercise.rest
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="w-[25%]">
         <Collapsible>
           <CollapsibleTrigger
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors"
             onClick={() => toggleExercise(exercise.name)}
           >
             {expandedExercises.has(exercise.name) ? (
@@ -216,26 +221,30 @@ export function WorkoutPlanDisplay({ plan, view, planId }: WorkoutPlanDisplayPro
             )}
             <span>View Instructions</span>
           </CollapsibleTrigger>
-          <CollapsibleContent>
-            {editing ? (
-              <Input
-                value={exercise.description}
-                onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "description", e.target.value)}
-              />
-            ) : (
-              <p className="mt-2 text-sm text-muted-foreground">
-                {exercise.description}
-              </p>
-            )}
+          <CollapsibleContent className="overflow-hidden transition-all duration-200">
+            <div className="py-2">
+              {editing ? (
+                <Input
+                  value={exercise.description}
+                  onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "description", e.target.value)}
+                  className="w-full"
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded-md">
+                  {exercise.description}
+                </p>
+              )}
+            </div>
           </CollapsibleContent>
         </Collapsible>
       </TableCell>
       {showActions && editing && (
-        <TableCell>
+        <TableCell className="w-[10%]">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => handleDeleteExercise(dayIndex, exerciseIndex)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -371,53 +380,110 @@ export function WorkoutPlanDisplay({ plan, view, planId }: WorkoutPlanDisplayPro
 
       {view === "exercises" && (
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Exercise Database</CardTitle>
-              <CardDescription>Detailed instructions for all exercises in your plan</CardDescription>
+          <Card className="border-none shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
+              <div className="flex flex-col space-y-4">
+                <div>
+                  <CardTitle className="text-2xl font-bold">Exercise Database</CardTitle>
+                  <CardDescription className="text-base">Browse and manage all exercises in your workout plan</CardDescription>
+                </div>
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Search exercises..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10"
+                  />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Exercise</TableHead>
-                    <TableHead>Instructions</TableHead>
-                    {editing && <TableHead>Actions</TableHead>}
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-[40%] text-base font-semibold">Exercise</TableHead>
+                    <TableHead className="w-[50%] text-base font-semibold">Instructions</TableHead>
+                    {editing && <TableHead className="w-[10%] text-base font-semibold">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {editedPlan.weeklySchedule.flatMap((workout, dayIndex) => 
-                    workout.exercises.map((exercise, exerciseIndex) => (
-                      <TableRow key={`${dayIndex}-${exerciseIndex}`}>
-                        <TableCell className="font-medium">{exercise.name}</TableCell>
+                  {(() => {
+                    const filteredExercises = editedPlan.weeklySchedule
+                      .flatMap((workout, dayIndex) => 
+                        workout.exercises.map((exercise, exerciseIndex) => ({
+                          ...exercise,
+                          dayIndex,
+                          exerciseIndex
+                        }))
+                      )
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .filter(exercise => 
+                        exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+
+                    if (filteredExercises.length === 0) {
+                      return (
+                        <TableRow>
+                          <TableCell colSpan={editing ? 3 : 2} className="h-24 text-center">
+                            <div className="flex flex-col items-center justify-center space-y-2">
+                              <Search className="h-8 w-8 text-muted-foreground" />
+                              <p className="text-muted-foreground">No exercises found</p>
+                              <p className="text-sm text-muted-foreground">Try adjusting your search query</p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    }
+
+                    return filteredExercises.map(({ name, description, dayIndex, exerciseIndex }) => (
+                      <TableRow 
+                        key={`${dayIndex}-${exerciseIndex}`} 
+                        className="group hover:bg-muted/50 border-b border-muted/30"
+                      >
+                        <TableCell className="font-medium py-4">
+                          {editing ? (
+                            <Input
+                              value={name}
+                              onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "name", e.target.value)}
+                              className="w-full"
+                            />
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <div className="h-2 w-2 rounded-full bg-primary/50" />
+                              <span className="text-base">{name}</span>
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Collapsible>
                             <CollapsibleTrigger
-                              className="flex items-center space-x-2"
-                              onClick={() => toggleExercise(exercise.name)}
+                              className="flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors py-4"
+                              onClick={() => toggleExercise(name)}
                             >
-                              {expandedExercises.has(exercise.name) ? (
+                              {expandedExercises.has(name) ? (
                                 <ChevronUp className="h-4 w-4" />
                               ) : (
                                 <ChevronDown className="h-4 w-4" />
                               )}
-                              <span>View Instructions</span>
+                              <span className="font-medium">View Instructions</span>
                             </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <div className="mt-2 space-y-2">
+                            <CollapsibleContent className="overflow-hidden transition-all duration-200">
+                              <div className="py-4">
                                 {editing ? (
                                   <Input
-                                    value={exercise.description}
+                                    value={description}
                                     onChange={(e) => handleExerciseChange(dayIndex, exerciseIndex, "description", e.target.value)}
+                                    className="w-full"
                                   />
                                 ) : (
-                                  <p className="text-sm text-muted-foreground">{exercise.description}</p>
+                                  <div className="bg-muted/30 p-4 rounded-lg">
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                      {description}
+                                    </p>
+                                  </div>
                                 )}
-                                <div className="text-sm">
-                                  <p><strong>Sets:</strong> {exercise.sets}</p>
-                                  <p><strong>Reps:</strong> {exercise.reps}</p>
-                                  <p><strong>Rest:</strong> {exercise.rest}</p>
-                                </div>
                               </div>
                             </CollapsibleContent>
                           </Collapsible>
@@ -428,6 +494,7 @@ export function WorkoutPlanDisplay({ plan, view, planId }: WorkoutPlanDisplayPro
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeleteExercise(dayIndex, exerciseIndex)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -435,7 +502,7 @@ export function WorkoutPlanDisplay({ plan, view, planId }: WorkoutPlanDisplayPro
                         )}
                       </TableRow>
                     ))
-                  )}
+                  })()}
                 </TableBody>
               </Table>
             </CardContent>
