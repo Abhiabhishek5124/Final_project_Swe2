@@ -1,61 +1,55 @@
 import { redirect } from "next/navigation"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NutritionPlanDisplay } from "@/components/dashboard/nutrition-plan-display"
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export default async function NutritionPage() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient()
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  // Check if user is authenticated using getUser()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (error || !user) {
     redirect("/login")
   }
 
-  const { data: nutritionPlan } = await supabase
-    .from("nutrition_plans")
+  // Get active nutrition plan
+  const { data: nutritionPlan, error: nutritionError } = await supabase
+    .from("nutrition_plan")
     .select("*")
-    .eq("user_id", session.user.id)
+    .eq("user_id", user.id)
     .eq("is_active", true)
     .single()
 
+  if (nutritionError) {
+    console.error("Error fetching nutrition plan:", nutritionError)
+    redirect("/dashboard/generatenutritionplan")
+  }
+
+  // If no plan exists, redirect to generate plan
   if (!nutritionPlan) {
-    redirect("/dashboard/generate")
+    redirect("/dashboard/generatenutritionplan")
+  }
+
+  // Validate plan content
+  if (!nutritionPlan.plan_content || !nutritionPlan.plan_content.meals) {
+    console.error("Invalid nutrition plan content:", nutritionPlan.plan_content)
+    redirect("/dashboard/generatenutritionplan")
   }
 
   return (
     <DashboardShell>
       <DashboardHeader
-        heading="Nutrition Plan"
-        text="Your personalized nutrition recommendations and meal plans"
-      >
-        <Button variant="outline">Edit Plan</Button>
-        <Button>Regenerate Plan</Button>
-      </DashboardHeader>
-      <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
-        <p className="text-sm text-yellow-700 dark:text-yellow-300">⚠️ Under Development - This feature will be available soon. Please keep patience.</p>
+        heading="Your Meal Plan"
+        text="Your personalized meal recommendation"
+      />
+      <div className="space-y-4">
+        <NutritionPlanDisplay 
+          plan={nutritionPlan.plan_content} 
+          planId={nutritionPlan.id}
+        />
       </div>
-      <Tabs defaultValue="daily" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="daily">Daily Plan</TabsTrigger>
-          <TabsTrigger value="weekly">Weekly Overview</TabsTrigger>
-          <TabsTrigger value="meals">Meal Database</TabsTrigger>
-        </TabsList>
-        <TabsContent value="daily" className="space-y-4">
-          <NutritionPlanDisplay plan={nutritionPlan.plan_content} view="daily" />
-        </TabsContent>
-        <TabsContent value="weekly" className="space-y-4">
-          <NutritionPlanDisplay plan={nutritionPlan.plan_content} view="weekly" />
-        </TabsContent>
-        <TabsContent value="meals" className="space-y-4">
-          <NutritionPlanDisplay plan={nutritionPlan.plan_content} view="meals" />
-        </TabsContent>
-      </Tabs>
     </DashboardShell>
   )
 }

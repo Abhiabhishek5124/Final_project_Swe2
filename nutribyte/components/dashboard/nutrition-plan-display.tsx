@@ -3,135 +3,257 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Edit, Save } from "lucide-react"
+import { ChevronDown, ChevronUp, Edit, Save, RefreshCw } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
 
-interface NutritionPlanDisplayProps {
-  plan: any
-  view: "daily" | "weekly" | "meals"
+interface Meal {
+  food_name: string
+  type: string
+  ingredients: string[]
+  instructions: string
+  calories: number
+  protein: number
+  carbs: number
+  sugar: number
+  other_nutrients: {
+    fiber: number
+    fat: number
+    sodium: number
+  }
 }
 
-export function NutritionPlanDisplay({ plan, view }: NutritionPlanDisplayProps) {
+interface NutritionPlan {
+  plan_summary: {
+    daily_calories: number
+    daily_protein: number
+    daily_carbs: number
+    daily_fat: number
+    notes: string
+  }
+  meals: Meal[]
+}
+
+interface NutritionPlanDisplayProps {
+  plan: NutritionPlan & { fitness_data_id: string }
+  planId: string
+}
+
+export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps) {
   const [editing, setEditing] = useState(false)
   const [editedPlan, setEditedPlan] = useState(plan)
+  const [expandedMeal, setExpandedMeal] = useState<string | null>(null)
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const toggleMeal = (mealName: string) => {
+    setExpandedMeal(expandedMeal === mealName ? null : mealName)
+  }
 
   const handleSave = async () => {
-    setEditing(false)
+    try {
+      console.log("Saving plan with data:", {
+        planId,
+        updatedPlan: editedPlan
+      })
+
+      const response = await fetch("/api/nutrition-plan", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          planId,
+          updatedPlan: editedPlan,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error("Error response from server:", data)
+        throw new Error(data.error || "Failed to update plan")
+      }
+
+      toast({
+        title: "Success",
+        description: "Meal plan updated successfully",
+      })
+      setEditing(false)
+      router.refresh() // Refresh the page to show updated data
+    } catch (error) {
+      console.error("Error saving plan:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update meal plan",
+        variant: "destructive",
+      })
+    }
   }
 
-  if (view === "daily") {
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-end">
-          {editing ? (
-            <Button onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Changes
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={() => setEditing(true)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Plan
-            </Button>
-          )}
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Breakfast</CardTitle>
-              <CardDescription>7:00 AM - 8:00 AM</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {editing ? (
-                <Textarea
-                  value={editedPlan.breakfast}
-                  onChange={(e) => setEditedPlan({ ...editedPlan, breakfast: e.target.value })}
-                  className="min-h-[150px]"
-                />
-              ) : (
-                <div className="space-y-2">
-                  <p>{plan.breakfast || "2 eggs, whole wheat toast, avocado, and a side of fruit."}</p>
-                  <p className="text-sm text-muted-foreground">Approx. 450 calories</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Lunch</CardTitle>
-              <CardDescription>12:00 PM - 1:00 PM</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {editing ? (
-                <Textarea
-                  value={editedPlan.lunch}
-                  onChange={(e) => setEditedPlan({ ...editedPlan, lunch: e.target.value })}
-                  className="min-h-[150px]"
-                />
-              ) : (
-                <div className="space-y-2">
-                  <p>{plan.lunch || "Grilled chicken salad with mixed greens, vegetables, and olive oil dressing."}</p>
-                  <p className="text-sm text-muted-foreground">Approx. 550 calories</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Dinner</CardTitle>
-              <CardDescription>6:00 PM - 7:00 PM</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {editing ? (
-                <Textarea
-                  value={editedPlan.dinner}
-                  onChange={(e) => setEditedPlan({ ...editedPlan, dinner: e.target.value })}
-                  className="min-h-[150px]"
-                />
-              ) : (
-                <div className="space-y-2">
-                  <p>{plan.dinner || "Baked salmon with quinoa and steamed vegetables."}</p>
-                  <p className="text-sm text-muted-foreground">Approx. 600 calories</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Snacks</CardTitle>
-              <CardDescription>Throughout the day</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {editing ? (
-                <Textarea
-                  value={editedPlan.snacks}
-                  onChange={(e) => setEditedPlan({ ...editedPlan, snacks: e.target.value })}
-                  className="min-h-[150px]"
-                />
-              ) : (
-                <div className="space-y-2">
-                  <p>{plan.snacks || "Greek yogurt with berries, handful of nuts, protein shake after workout."}</p>
-                  <p className="text-sm text-muted-foreground">Approx. 300 calories total</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
+  const handleRegenerate = async () => {
+    try {
+      console.log('Attempting to deactivate plan:', { planId })
+      
+      // Deactivate the current plan
+      const response = await fetch("/api/nutrition-plan", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          planId,
+          is_active: false,
+        }),
+      });
 
-  if (view === "weekly") {
-    return (
-      <div className="space-y-4">
-        <p>Weekly nutrition plan view would go here</p>
-      </div>
-    )
+      const data = await response.json();
+      console.log('Deactivate response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to deactivate current plan");
+      }
+
+      // Redirect to generate page
+      router.push("/dashboard/generatenutritionplan");
+    } catch (error) {
+      console.error("Error in regeneration process:", error);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate plan. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMealChange = (
+    mealIndex: number,
+    field: keyof Meal,
+    value: string | number
+  ) => {
+    const newPlan = { ...editedPlan }
+    newPlan.meals[mealIndex][field] = value as never
+    setEditedPlan(newPlan)
   }
 
   return (
     <div className="space-y-4">
-      <p>Meal database view would go here</p>
+      <div className="flex justify-end space-x-2">
+        {editing ? (
+          <>
+            <Button onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+            <Button variant="outline" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="outline" onClick={() => setEditing(true)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Meal
+            </Button>
+            <Button onClick={handleRegenerate}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Generate New Meal
+            </Button>
+          </>
+        )}
+      </div>
+
+      <div className="grid gap-6">
+        {editedPlan.meals.map((meal, index) => (
+          <Card key={index} className="overflow-hidden">
+            <CardHeader className="bg-primary/5">
+              <CardTitle className="text-2xl font-bold">
+                {editing ? (
+                  <Input
+                    value={meal.food_name}
+                    onChange={(e) => handleMealChange(index, "food_name", e.target.value)}
+                    className="text-2xl font-bold"
+                  />
+                ) : (
+                  meal.food_name
+                )}
+              </CardTitle>
+              <CardDescription className="text-lg">
+                {meal.type} • {meal.calories} calories
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Nutrition Facts</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>Protein: {meal.protein}g</div>
+                    <div>Carbs: {meal.carbs}g</div>
+                    <div>Fat: {meal.other_nutrients.fat}g</div>
+                    <div>Fiber: {meal.other_nutrients.fiber}g</div>
+                    <div>Sugar: {meal.sugar}g</div>
+                    <div>Sodium: {meal.other_nutrients.sodium}mg</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Ingredients</h3>
+                  {editing ? (
+                    <Textarea
+                      value={meal.ingredients.join("\n")}
+                      onChange={(e) => handleMealChange(index, "ingredients", e.target.value.split("\n"))}
+                      className="min-h-[100px]"
+                    />
+                  ) : (
+                    <ul className="list-disc list-inside text-sm">
+                      {meal.ingredients.map((ingredient, idx) => (
+                        <li key={idx}>{ingredient}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Instructions</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleMeal(meal.food_name)}
+                  >
+                    {expandedMeal === meal.food_name ? (
+                      <>
+                        <ChevronUp className="mr-2 h-4 w-4" />
+                        Hide Instructions
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="mr-2 h-4 w-4" />
+                        Show Instructions
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {expandedMeal === meal.food_name && (
+                  <div className="mt-2 p-4 bg-muted rounded-md">
+                    {editing ? (
+                      <Textarea
+                        value={meal.instructions}
+                        onChange={(e) => handleMealChange(index, "instructions", e.target.value)}
+                        className="min-h-[150px]"
+                      />
+                    ) : (
+                      <p className="whitespace-pre-line text-sm">{meal.instructions}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }
