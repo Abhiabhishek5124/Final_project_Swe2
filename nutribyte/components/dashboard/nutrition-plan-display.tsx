@@ -81,7 +81,7 @@ export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps
         title: "Success",
         description: "Meal plan updated successfully",
       })
-      setEditing(false)
+    setEditing(false)
       router.refresh() // Refresh the page to show updated data
     } catch (error) {
       console.error("Error saving plan:", error)
@@ -97,8 +97,8 @@ export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps
     try {
       console.log('Attempting to deactivate plan:', { planId })
       
-      // Deactivate the current plan
-      const response = await fetch("/api/nutrition-plan", {
+      // First, deactivate the current plan
+      const deactivateResponse = await fetch("/api/nutrition-plan", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -109,15 +109,27 @@ export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps
         }),
       });
 
-      const data = await response.json();
-      console.log('Deactivate response:', data);
+      const deactivateData = await deactivateResponse.json();
+      console.log('Deactivate response:', deactivateData);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to deactivate current plan");
+      if (!deactivateResponse.ok) {
+        throw new Error(deactivateData.error || "Failed to deactivate current plan");
       }
 
-      // Redirect to generate page
-      router.push("/dashboard/generatenutritionplan");
+      // Then delete the plan
+      const deleteResponse = await fetch(`/api/nutrition-plan?planId=${planId}`, {
+        method: "DELETE",
+      });
+
+      const deleteData = await deleteResponse.json();
+      console.log('Delete response:', deleteData);
+
+      if (!deleteResponse.ok) {
+        throw new Error(deleteData.error || "Failed to delete current plan");
+      }
+
+      // Force a full page reload to ensure clean state
+      window.location.href = "/dashboard/generatenutritionplan";
     } catch (error) {
       console.error("Error in regeneration process:", error);
       toast({
@@ -138,10 +150,10 @@ export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps
     setEditedPlan(newPlan)
   }
 
-  return (
-    <div className="space-y-4">
+    return (
+      <div className="space-y-4">
       <div className="flex justify-end space-x-2">
-        {editing ? (
+          {editing ? (
           <>
             <Button onClick={handleSave}>
               <Save className="mr-2 h-4 w-4" />
@@ -151,7 +163,7 @@ export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps
               Cancel
             </Button>
           </>
-        ) : (
+          ) : (
           <>
             <Button variant="outline" onClick={() => setEditing(true)}>
               <Edit className="mr-2 h-4 w-4" />
@@ -162,21 +174,21 @@ export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps
               Generate New Meal
             </Button>
           </>
-        )}
-      </div>
+          )}
+        </div>
 
       <div className="grid gap-6">
         {editedPlan.meals.map((meal, index) => (
           <Card key={index} className="overflow-hidden">
             <CardHeader className="bg-primary/5">
               <CardTitle className="text-2xl font-bold">
-                {editing ? (
+              {editing ? (
                   <Input
                     value={meal.food_name}
                     onChange={(e) => handleMealChange(index, "food_name", e.target.value)}
                     className="text-2xl font-bold"
-                  />
-                ) : (
+                />
+              ) : (
                   meal.food_name
                 )}
               </CardTitle>
@@ -199,13 +211,13 @@ export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps
                 </div>
                 <div className="space-y-2">
                   <h3 className="font-semibold">Ingredients</h3>
-                  {editing ? (
-                    <Textarea
+              {editing ? (
+                <Textarea
                       value={meal.ingredients.join("\n")}
                       onChange={(e) => handleMealChange(index, "ingredients", e.target.value.split("\n"))}
                       className="min-h-[100px]"
-                    />
-                  ) : (
+                />
+              ) : (
                     <ul className="list-disc list-inside text-sm">
                       {meal.ingredients.map((ingredient, idx) => (
                         <li key={idx}>{ingredient}</li>
@@ -215,7 +227,7 @@ export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps
                 </div>
               </div>
 
-              <div className="space-y-2">
+                <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">Instructions</h3>
                   <Button
@@ -238,17 +250,17 @@ export function NutritionPlanDisplay({ plan, planId }: NutritionPlanDisplayProps
                 </div>
                 {expandedMeal === meal.food_name && (
                   <div className="mt-2 p-4 bg-muted rounded-md">
-                    {editing ? (
-                      <Textarea
+              {editing ? (
+                <Textarea
                         value={meal.instructions}
                         onChange={(e) => handleMealChange(index, "instructions", e.target.value)}
-                        className="min-h-[150px]"
-                      />
-                    ) : (
+                  className="min-h-[150px]"
+                />
+              ) : (
                       <p className="whitespace-pre-line text-sm">{meal.instructions}</p>
                     )}
-                  </div>
-                )}
+                </div>
+              )}
               </div>
             </CardContent>
           </Card>

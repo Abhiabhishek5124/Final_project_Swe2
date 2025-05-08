@@ -5,49 +5,67 @@ import { GenerateNutritionForm } from "@/components/dashboard/generate-nutrition
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export default async function GenerateNutritionPage() {
-  const supabase = await createSupabaseServerClient()
+  try {
+    const supabase = await createSupabaseServerClient()
 
-  // Check if user is authenticated using getUser()
-  const { data: { user }, error } = await supabase.auth.getUser()
+    // Check if user is authenticated using getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  if (error || !user) {
-    redirect("/login")
-  }
+    if (authError || !user) {
+      console.log('Authentication error or no user found')
+      redirect("/login")
+    }
 
-  const { data: fitnessData } = await supabase
-    .from("fitness_data")
-    .select("*")
-    .eq("user_id", user.id)
-    .single()
+    // Fetch user profile
+    const { data: userProfile, error: profileError } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single()
 
-  if (!fitnessData) {
-    redirect("/onboarding")
-  }
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError)
+      redirect("/dashboard/profile")
+    }
 
-  const { data: existingPlan } = await supabase
-    .from("nutrition_plan")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .single()
+    if (!userProfile) {
+      console.log('No user profile found')
+      redirect("/dashboard/profile")
+    }
 
-  // If there's an active plan, redirect to the nutrition page
-  if (existingPlan) {
-    redirect("/dashboard/nutrition")
-  }
+    // Fetch fitness data
+    const { data: fitnessData, error: fitnessError } = await supabase
+      .from("fitness_data")
+      .select("*")
+      .eq("user_id", user.id)
+      .single()
 
-  return (
-    <DashboardShell>
-      <DashboardHeader
-        heading="Generate Nutrition Plan"
-        text="Create a personalized nutrition plan based on your fitness goals and preferences"
-      />
-      <div className="grid gap-4">
-        <GenerateNutritionForm
-          userProfile={{ id: user.id }}
-          fitnessData={fitnessData}
+    if (fitnessError) {
+      console.error('Error fetching fitness data:', fitnessError)
+      redirect("/dashboard/profile")
+    }
+
+    if (!fitnessData) {
+      console.log('No fitness data found')
+      redirect("/dashboard/profile")
+    }
+
+    return (
+      <DashboardShell>
+        <DashboardHeader
+          heading="Generate Nutrition Plan"
+          text="Create a personalized nutrition plan based on your fitness goals and preferences"
         />
-      </div>
-    </DashboardShell>
-  )
+        <div className="grid gap-4">
+          <GenerateNutritionForm
+            userProfile={userProfile}
+            fitnessData={fitnessData}
+          />
+        </div>
+      </DashboardShell>
+    )
+  } catch (error) {
+    console.error('Unexpected error in generate nutrition page:', error)
+    redirect("/dashboard/profile")
+  }
 } 
