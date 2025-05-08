@@ -12,26 +12,14 @@ export async function createSupabaseServerClient() {
     {
       cookies: {
         async get(name: string) {
-          try {
-            return cookieStore.get(name)?.value
-          } catch (error) {
-            console.error('Error parsing cookie:', error)
-            return undefined
-          }
+          const cookie = await cookieStore.get(name)
+          return cookie?.value
         },
         async set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options })
-          } catch (error) {
-            console.error('Error setting cookie:', error)
-          }
+          await cookieStore.set({ name, value, ...options })
         },
         async remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options })
-          } catch (error) {
-            console.error('Error removing cookie:', error)
-          }
+          await cookieStore.set({ name, value: '', ...options })
         },
       },
     }
